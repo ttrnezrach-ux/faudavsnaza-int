@@ -2,7 +2,7 @@ import { getCookie, getRequest, setCookie } from "@tanstack/react-start/server";
 import { clientAddr } from "@/lib/client-ip";
 import { composeInquiry, deliverInquiry, type InquiryFields } from "@/lib/contact-mail";
 
-const DEFAULT_INBOX = "vivik2@gmail.com";
+const DEFAULT_INBOX = "vivik1@gmail.com";
 const COOLDOWN_MS = 25_000;
 const COOKIE = "contact_cd";
 
