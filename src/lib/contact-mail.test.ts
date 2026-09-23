@@ -30,6 +30,7 @@ describe("inquiry mail", () => {
     assert.match(mail.text, /name=Dana Levi/);
     assert.match(mail.text, /email=dana@example.com/);
     assert.equal(mail.replyTo, "dana@example.com");
+    assert.doesNotMatch(mail.text, /vivik1@gmail\.com/);
     assert.doesNotMatch(mail.text, /vivik2@gmail\.com/);
     assert.doesNotMatch(mail.subject, /\n/);
   });
@@ -83,12 +84,13 @@ describe("inquiry mail", () => {
     const files = walk(root.pathname).filter((path) => /\.(tsx?|css)$/.test(path));
     const leaks = files.filter((path) => {
       if (path.endsWith("contact.server.ts") || path.endsWith(".test.ts")) return false;
-      return /vivik2@gmail\.com/.test(readFileSync(path, "utf8"));
+      return /vivik[12]@gmail\.com/.test(readFileSync(path, "utf8"));
     });
     assert.deepEqual(leaks, []);
     const server = readFileSync(new URL("./contact.server.ts", import.meta.url), "utf8");
     assert.match(server, /CONTACT_INBOX/);
-    assert.match(server, /vivik2@gmail\.com/);
+    assert.match(server, /vivik1@gmail\.com/);
+    assert.doesNotMatch(server, /vivik2@gmail\.com/);
     assert.match(server, /formsubmit|RESEND_API_KEY/);
   });
 });
