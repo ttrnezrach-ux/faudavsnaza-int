@@ -184,11 +184,13 @@ export const OUTLET_LINKS = [
 ] as const;
 
 export function publicOrigin(): string {
-  const raw = String(
-    (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_PUBLIC_HOSTNAME) ||
-      process.env.VITE_PUBLIC_HOSTNAME ||
-      "",
-  )
+  // Vite inlines `import.meta.env.VITE_*` at build time. Set
+  // VITE_PUBLIC_HOSTNAME on the Vercel production and preview environments
+  // before the build (hostname only, no scheme).
+  const fromBuild = import.meta.env.VITE_PUBLIC_HOSTNAME;
+  const fromRuntime =
+    typeof process !== "undefined" && process.env ? process.env.VITE_PUBLIC_HOSTNAME : undefined;
+  const raw = String(fromBuild || fromRuntime || "")
     .split(",")[0]
     .trim()
     .replace(/^https?:\/\//, "")
