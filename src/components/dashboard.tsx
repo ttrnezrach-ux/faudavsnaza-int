@@ -36,6 +36,7 @@ import { PointsGraph } from "@/components/points-graph";
 import { WorkThumb } from "@/components/work-still";
 import { NazaScreenings } from "@/components/naza-screenings";
 import { UniqueIpCounter } from "@/components/unique-ip-counter";
+import { ContactBox } from "@/components/contact-box";
 import { ChangeBanner } from "@/components/change-banner";
 import { useI18n } from "@/lib/i18n";
 import { useWork } from "@/lib/work";
@@ -986,6 +987,7 @@ export function Dashboard() {
               </p>
             </div>
           </div>
+          <ContactBox />
           <UniqueIpCounter />
         </div>
       </footer>
