@@ -1,11 +1,13 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
+type OfficeQr = { otpauth: string; secret: string; qr: string };
+
 export type OfficeLockState =
-  | { status: "setup"; otpauth: string; secret: string; qr: string }
+  | ({ status: "setup" } & OfficeQr)
+  | ({ status: "wait" } & OfficeQr)
   | { status: "locked" }
-  | { status: "unlocked" }
-  | { status: "wait" };
+  | { status: "unlocked" };
 
 export const getOfficeLockState = createServerFn({ method: "GET" }).handler(async () => {
   const { readOfficeLockState } = await import("@/lib/office-lock.server");

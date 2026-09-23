@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { getOfficeLockState, lockOfficeSession, verifyOfficeLock, type OfficeLockState } from "@/lib/office-lock";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,12 +12,24 @@ export function OfficeGate({ children }: { children: React.ReactNode }) {
   const [code, setCode] = useState("");
   const [busy, setBusy] = useState(false);
   const [wrong, setWrong] = useState(false);
+  const [loadError, setLoadError] = useState(false);
+
+  const load = useCallback(() => {
+    setLoadError(false);
+    void getOfficeLockState()
+      .then((next) => {
+        setState(next);
+        setLoadError(false);
+      })
+      .catch(() => {
+        setState(null);
+        setLoadError(true);
+      });
+  }, []);
 
   useEffect(() => {
-    void getOfficeLockState()
-      .then(setState)
-      .catch(() => setState({ status: "locked" }));
-  }, []);
+    load();
+  }, [load]);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -30,6 +42,9 @@ export function OfficeGate({ children }: { children: React.ReactNode }) {
       if (next.status === "unlocked") {
         setCode("");
         setPassword("");
+        setWrong(false);
+      } else if (next.status === "wait") {
+        setWrong(false);
       } else setWrong(true);
     } catch {
       setWrong(true);
@@ -45,7 +60,22 @@ export function OfficeGate({ children }: { children: React.ReactNode }) {
     setPassword("");
   }
 
-  if (!state) return <div className="min-h-dvh bg-background" />;
+  if (!state) {
+    return (
+      <div className="flex min-h-dvh items-center justify-center bg-background px-4 text-foreground">
+        {loadError ? (
+          <section className="w-full max-w-md rounded-2xl bg-card p-5 shadow-[var(--shadow-border)]">
+            <p className="text-sm leading-relaxed text-muted-foreground">{t("officeLockLoadError")}</p>
+            <Button type="button" className="mt-4 h-11 w-full" onClick={load}>
+              {t("officeLockRetry")}
+            </Button>
+          </section>
+        ) : null}
+      </div>
+    );
+  }
+
+  const showQr = state.status === "setup" || state.status === "wait";
 
   if (state.status === "unlocked") {
     return (
@@ -66,10 +96,10 @@ export function OfficeGate({ children }: { children: React.ReactNode }) {
         <p className="text-xs font-medium tracking-[0.18em] text-muted-foreground">{t("office")}</p>
         <h1 className="mt-1 font-display text-2xl font-medium">{t("officeLockTitle")}</h1>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          {state.status === "setup" ? t("officeLockHint") : state.status === "wait" ? t("officeLockWait") : t("officeLockLocked")}
+          {state.status === "wait" ? t("officeLockWait") : showQr ? t("officeLockHint") : t("officeLockLocked")}
         </p>
 
-        {state.status === "setup" ? (
+        {showQr ? (
           <div className="mt-4 space-y-3">
             <div className="flex justify-center rounded-xl bg-heat p-3" dangerouslySetInnerHTML={{ __html: state.qr }} />
             <p className="text-center text-xs text-muted-foreground">{t("officeLockSecret")}</p>
@@ -99,7 +129,7 @@ export function OfficeGate({ children }: { children: React.ReactNode }) {
             onChange={(e) => setPassword(e.target.value)}
             className="h-12"
           />
-          {state.status === "setup" ? <p className="text-xs text-muted-foreground">{t("officeLockPasswordHint")}</p> : null}
+          {showQr ? <p className="text-xs text-muted-foreground">{t("officeLockPasswordHint")}</p> : null}
 
           <label className="block text-sm font-medium" htmlFor="office-code">
             {t("officeLockCode")}
