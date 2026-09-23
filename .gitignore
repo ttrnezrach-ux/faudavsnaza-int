@@ -3,3 +3,7 @@ node_modules/
 .github_repo
 .env
 .env.*
+
+# Link files and Nitro build output. A committed .vercel/output makes
+# Git deploys skip npm run build and ship that stale prebuild.
+.vercel/
