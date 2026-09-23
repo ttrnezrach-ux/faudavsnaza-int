@@ -51,8 +51,10 @@ function armCooldown(): void {
 /**
  * Accepts a public inquiry and emails CONTACT_INBOX (default hidden here).
  * Resend is used when RESEND_API_KEY is set; otherwise the server posts to
- * FormSubmit. The first FormSubmit delivery to a new inbox needs the
- * activation link FormSubmit sends to that mailbox.
+ * FormSubmit. FormSubmit is behind Cloudflare, so a datacenter request can
+ * come back as HTTP 403 until that path is allowed — set RESEND_API_KEY for
+ * a direct send. The first successful FormSubmit delivery also needs the
+ * activation link FormSubmit emails to the inbox.
  */
 export async function submitInquiry(input: ContactSubmission): Promise<ContactResult> {
   if ((input.company ?? "").trim()) {
