@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "פאודה 5 מול נז״א · מפת צפייה, שיח ופסטיבל",
+      "hasCanvas": false,
+      "bodyTextLen": 5458,
+      "bodyTextHash": "b192ccc00abee7caa7a0425c3ad096f7810070844a98661ec03981587acadb5c",
+      "bodyTextPrefix": "דלג לתוכן הראשי עברית פאודה 5 נז״א 9/11 Turning Point השוואה פאו",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "פאודה 5 מול נז״א · מפת צפייה, שיח ופסטיבל",
+      "hasCanvas": false,
+      "bodyTextLen": 5469,
+      "bodyTextHash": "57d359f86a04dc3b51502cb5a629c2bd05fed5c439ed86c627f31b84f94aabca",
+      "bodyTextPrefix": "דלג לתוכן הראשי עברית פאודה 5 נז״א 9/11 Turning Point השוואה פאו",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/app-builder-preview-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/app-builder-preview.json"
+}

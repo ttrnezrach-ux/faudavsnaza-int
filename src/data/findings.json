@@ -1,0 +1,32 @@
+[
+  {
+    "id": "w1-2026-09",
+    "week": 1,
+    "from": "9.9",
+    "to": "14.9",
+    "version": 24,
+    "at": "2026-09-14T21:00:00+03:00",
+    "he": "שבוע הפתיחה. שיא עולמי #4. בשיא 57 מדינות בטופ 10 לפחות יום אחד; ישראל ולבנון במקום 1. Netflix: 2.1M צפיות, 15.9M שעות.",
+    "en": "Opening week. Worldwide peak #4. 57 countries in the top 10 at least one day; Israel and Lebanon at #1. Netflix: 2.1M views, 15.9M hours."
+  },
+  {
+    "id": "w2-2026-09",
+    "week": 2,
+    "from": "15.9",
+    "to": "18.9",
+    "version": 40,
+    "at": "2026-09-20T16:31:00+03:00",
+    "he": "השבוע השני נשמר ליד הראשון. עולמי ירד ל-#12 · 28 מדינות ב-18.9 · 109 נקודות. מאוריציוס וקלדוניה החדשה נוספו. ישראל ולבנון עדיין #1.",
+    "en": "Week 2 sits beside week 1. Worldwide down to #12 · 28 countries on 18 Sep · 109 points. Mauritius and New Caledonia added. Israel and Lebanon still #1."
+  },
+  {
+    "id": "w2-graph-2026-09-20",
+    "week": 2,
+    "from": "14.9",
+    "to": "20.9",
+    "version": 42,
+    "at": "2026-09-20T19:32:00+03:00",
+    "he": "גרף FlixPatrol 14–20 בספטמבר: הנקודות ירדו מ־253 ל־62. דירוג ממוצע מ־#6 ל־#8. 19–20 בספטמבר נוספו בלי למחוק את ימי 9–18.",
+    "en": "FlixPatrol graph 14–20 September: points fell from 253 to 62. Average rank from #6 to #8. 19–20 September added without deleting 9–18."
+  }
+]

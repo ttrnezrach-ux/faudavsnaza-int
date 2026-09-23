@@ -1,0 +1,34 @@
+{
+  "title": "פאודה 5 מול נז״א",
+  "card": "custom",
+  "type": "article",
+  "color": "0c0d0e",
+  "image": "/share-collage.jpg",
+  "description": "אותה מתודולוגיה, שתי יצירות: פאודה 5 בנטפליקס מול הסרט התיעודי נז״א (נזק אגבי) מוונציה. דירוגים, טון שיח ורשתות לפי מדינה.",
+  "locales": {
+    "he": {
+      "title": "פאודה 5 מול נז״א · מפת צפייה, שיח ופסטיבל",
+      "description": "אותה מתודולוגיה, שתי יצירות: פאודה 5 בנטפליקס מול הסרט התיעודי נז״א (נזק אגבי) מוונציה. דירוגים, טון שיח ורשתות לפי מדינה."
+    },
+    "en": {
+      "title": "Fauda 5 vs NAZA · viewing, talk, festival",
+      "description": "Same method, two works: Fauda season 5 on Netflix versus the Venice documentary NAZA (collateral damage). Country map of ranks, discourse tone, and social posts."
+    },
+    "ar": {
+      "title": "فودا 5 مقابل نازا · خريطة المشاهدة والخطاب",
+      "description": "المنهج نفسه، عملان: فودا 5 على نتفليكس مقابل الوثائقي نازا (ضرر جانبي) من البندقية. تصنيف ونبرة خطاب ومنشورات حسب البلد."
+    },
+    "fr": {
+      "title": "Fauda 5 face à NAZA · audiences, débat, festival",
+      "description": "Même méthode, deux œuvres : Fauda saison 5 sur Netflix face au documentaire NAZA (dommages collatéraux) à Venise. Classements, ton du débat et posts par pays."
+    },
+    "es": {
+      "title": "Fauda 5 frente a NAZA · audiencia, debate, festival",
+      "description": "El mismo método, dos obras: Fauda temporada 5 en Netflix frente al documental NAZA (daño colateral) de Venecia. Rankings, tono del debate y publicaciones por país."
+    },
+    "ru": {
+      "title": "«Фауда 5» против NAZA · просмотры, дискуссия, фестиваль",
+      "description": "Тот же метод, две работы: «Фауда 5» на Netflix против венецианского документального фильма NAZA («сопутствующий ущерб»). Рейтинги, тон дискуссии и посты по странам."
+    }
+  }
+}

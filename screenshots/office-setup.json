@@ -1,0 +1,36 @@
+{
+  "url": "http://127.0.0.1:8080/office",
+  "viewports": {
+    "desktop": {
+      "width": 1280,
+      "height": 800,
+      "status": 200,
+      "title": "פאודה 5 מול נז״א · מפת צפייה, שיח ופסטיבל",
+      "hasCanvas": false,
+      "bodyTextLen": 113,
+      "bodyTextHash": "0fbab3923476a6a7e458a419898538a321009ff129ad04a7239728458734a5ef",
+      "bodyTextPrefix": "דלג לתוכן הראשי עברית בקאופיס סיסמה ומאמת הזינו סיסמה ואת הקוד מ",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/office-setup.png"
+    },
+    "mobile": {
+      "width": 390,
+      "height": 844,
+      "status": 200,
+      "title": "פאודה 5 מול נז״א · מפת צפייה, שיח ופסטיבל",
+      "hasCanvas": false,
+      "bodyTextLen": 113,
+      "bodyTextHash": "0fbab3923476a6a7e458a419898538a321009ff129ad04a7239728458734a5ef",
+      "bodyTextPrefix": "דלג לתוכן הראשי עברית בקאופיס סיסמה ומאמת הזינו סיסמה ואת הקוד מ",
+      "horizontalOverflow": false,
+      "consoleErrors": [],
+      "pageErrors": [],
+      "screenshot": "/workspace/screenshots/office-setup-mobile.png"
+    }
+  },
+  "brandWarnings": [],
+  "authWarnings": [],
+  "verdictFile": "/workspace/screenshots/office-setup.json"
+}

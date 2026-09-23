@@ -1,0 +1,32 @@
+[
+  {
+    "version": 38,
+    "releasedAt": "2026-09-19T17:02:00+03:00",
+    "noteHe": "SEO, האשטאגים, Google Analytics.",
+    "noteEn": "SEO, hashtags, Google Analytics."
+  },
+  {
+    "version": 39,
+    "releasedAt": "2026-09-20T16:24:00+03:00",
+    "noteHe": "סריקה שבועית לפי תמונה במקום שאיבה יומית.",
+    "noteEn": "Weekly screenshot scan instead of a daily pull."
+  },
+  {
+    "version": 40,
+    "releasedAt": "2026-09-20T16:31:00+03:00",
+    "noteHe": "מצעד 9–18 בספטמבר לפי צילום. מאוריציוס וקלדוניה החדשה. עולמי #12.",
+    "noteEn": "Chart 9–18 September from a screenshot. Mauritius and New Caledonia. Worldwide #12."
+  },
+  {
+    "version": 41,
+    "releasedAt": "2026-09-20T16:38:00+03:00",
+    "noteHe": "כלי גרסאות בבקאופיס. מסקנות מצטברות לפי שבוע — בלי למחוק עבר.",
+    "noteEn": "Version manager in the back office. Weekly findings accumulate — past weeks stay."
+  },
+  {
+    "version": 42,
+    "releasedAt": "2026-09-20T19:32:00+03:00",
+    "noteHe": "גרף FlixPatrol 14–20 בספטמבר על האתר. 253→62 נקודות.",
+    "noteEn": "FlixPatrol 14–20 September graph on the site. 253→62 points."
+  }
+]

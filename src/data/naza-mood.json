@@ -1,0 +1,231 @@
+{
+  "sampleSize": 21,
+  "facebookLocked": 0,
+  "facebookReactions": 0,
+  "buckets": {
+    "support": 6,
+    "mixed": 8,
+    "critical": 7
+  },
+  "emotions": {
+    "grief": 3,
+    "praise": 3,
+    "tooHard": 1,
+    "sanitized": 2,
+    "anger": 3,
+    "solidarity": 6,
+    "critical": 3
+  },
+  "comments": [
+    {
+      "id": "naza-m-fb-post-19",
+      "platform": "facebook",
+      "by": "Einat Temkin",
+      "text": "Greece — Thessaloniki beginning Oct. 1 (Olympion, Pavlos Zannas, Stavros Tornes, John Cassavetes). Nationwide theatrical beginning Oct. 2 — Filmtrade & Tanweer.",
+      "emotion": "solidarity",
+      "bucket": "mixed",
+      "url": "https://www.facebook.com/share/p/1Bw2ngM9Nf/",
+      "lang": "en"
+    },
+    {
+      "id": "naza-m-fb-eta-pt",
+      "platform": "facebook",
+      "by": "Einat Temkin",
+      "text": "Portugal — theatrical release beginning Oct. 1",
+      "emotion": "solidarity",
+      "bucket": "mixed",
+      "url": "https://www.facebook.com/share/p/1Bw2ngM9Nf/",
+      "lang": "en"
+    },
+    {
+      "id": "naza-m-fb-eta-fr",
+      "platform": "facebook",
+      "by": "Einat Temkin",
+      "text": "France — reportedly Sept. 30 — TBC",
+      "emotion": "solidarity",
+      "bucket": "mixed",
+      "url": "https://www.facebook.com/share/p/1Bw2ngM9Nf/",
+      "lang": "en"
+    },
+    {
+      "id": "naza-m-fb-eta-gr",
+      "platform": "facebook",
+      "by": "Einat Temkin",
+      "text": "Greece / Athens International Film Festival — reportedly Sept. 30–Oct. 11 — TBC",
+      "emotion": "solidarity",
+      "bucket": "mixed",
+      "url": "https://www.facebook.com/share/p/1Bw2ngM9Nf/",
+      "lang": "en"
+    },
+    {
+      "id": "naza-m-fb-eta-ro",
+      "platform": "facebook",
+      "by": "Einat Temkin",
+      "text": "Romania — reportedly coming in October — TBC. Dates Oct 6–8 are extremely tentative (filmmakers asked to avoid them).",
+      "emotion": "solidarity",
+      "bucket": "mixed",
+      "url": "https://www.facebook.com/share/p/1Bw2ngM9Nf/",
+      "lang": "en"
+    },
+    {
+      "id": "naza-m-petition",
+      "platform": "facebook",
+      "by": "יוצר ישראלי, מתוך העצומה",
+      "text": "תפקידם המרכזי של אמנות ועיתונות הוא להחזיק מראה מול החברה שבה הן קיימות.",
+      "emotion": "solidarity",
+      "bucket": "support",
+      "url": "https://en.wikipedia.org/wiki/NAZA_(film)",
+      "lang": "he"
+    },
+    {
+      "id": "naza-m-vulture",
+      "platform": "x",
+      "by": "Bilge Ebiri",
+      "text": "The results are impossible to shake.",
+      "emotion": "praise",
+      "bucket": "support",
+      "url": "https://www.vulture.com/article/review-naza-is-one-of-the-most-important-films-of-our-time.html",
+      "lang": "en"
+    },
+    {
+      "id": "naza-m-972",
+      "platform": "facebook",
+      "by": "+972 reader",
+      "text": "The moment a person eating dinner becomes a number on a screen.",
+      "emotion": "grief",
+      "bucket": "support",
+      "url": "https://www.972mag.com/naza-gaza-film-collateral-damage/",
+      "lang": "en"
+    },
+    {
+      "id": "naza-m-timeout",
+      "platform": "x",
+      "by": "John Bleasdale",
+      "text": "As a document, it is an indictment.",
+      "emotion": "praise",
+      "bucket": "support",
+      "url": "https://www.timeout.com/movies/naza-review-2026",
+      "lang": "en"
+    },
+    {
+      "id": "naza-m-oseran",
+      "platform": "x",
+      "by": "Ariel Oseran",
+      "text": "The title of their film suggests otherwise. Collateral is not the objective.",
+      "emotion": "critical",
+      "bucket": "critical",
+      "url": "https://x.com/ariel_oseran/status/2099780089923670264",
+      "lang": "en"
+    },
+    {
+      "id": "naza-m-zohar",
+      "platform": "x",
+      "by": "מגיב לזוהר",
+      "text": "בגידה. תשואות של אנטישמים בחו\"ל.",
+      "emotion": "anger",
+      "bucket": "critical",
+      "url": "https://www.ynet.co.il/entertainment/article/ryykcpvffg",
+      "lang": "he"
+    },
+    {
+      "id": "naza-m-zamir",
+      "platform": "facebook",
+      "by": "תגובה לדיווח על הרמטכ\"ל",
+      "text": "עלילות דם. עדויות אנונימיות אי אפשר לאמת.",
+      "emotion": "anger",
+      "bucket": "critical",
+      "url": "https://www.nytimes.com/2026/09/14/world/middleeast/israel-naza-documentary-backlash.html",
+      "lang": "he"
+    },
+    {
+      "id": "naza-m-eisenkot",
+      "platform": "facebook",
+      "by": "מגיב לאיזנקוט",
+      "text": "עיוורון מוסרי. לא ראו את 7 באוקטובר.",
+      "emotion": "sanitized",
+      "bucket": "mixed",
+      "url": "https://www.nytimes.com/2026/09/14/world/middleeast/israel-naza-documentary-backlash.html",
+      "lang": "he"
+    },
+    {
+      "id": "naza-m-hard",
+      "platform": "x",
+      "by": "צופה בוונציה",
+      "text": "Twenty-five minutes of applause because nobody could speak.",
+      "emotion": "tooHard",
+      "bucket": "support",
+      "url": "https://www.timesofisrael.com/israeli-film-about-killing-of-gazan-civilians-gets-record-ovation-at-venice-premiere/",
+      "lang": "en"
+    },
+    {
+      "id": "naza-m-oct7",
+      "platform": "x",
+      "by": "Ms S",
+      "text": "למה לדרוש להציג את 7 באוקטובר בסרט על מדיניות נז\"א? האם זה אמור להצדיק את ההרג?",
+      "emotion": "sanitized",
+      "bucket": "mixed",
+      "url": "https://x.com/Ms_Stentorian/status/2099775091055776179",
+      "lang": "he"
+    },
+    {
+      "id": "naza-m-abraham",
+      "platform": "x",
+      "by": "Yuval Abraham",
+      "text": "Denial of a crime is what helps it persist. Israelis should watch this film.",
+      "emotion": "grief",
+      "bucket": "support",
+      "url": "https://www.jpost.com/israel-news/article-908432",
+      "lang": "en"
+    },
+    {
+      "id": "naza-m-libel",
+      "platform": "facebook",
+      "by": "מגיב ישראלי",
+      "text": "24 אנונימיים. בלי שמות, בלי דרגות, בלי אימות. זה לא תחקיר.",
+      "emotion": "critical",
+      "bucket": "critical",
+      "url": "https://www.jpost.com/israel-news/article-908432",
+      "lang": "he"
+    },
+    {
+      "id": "naza-m-idf",
+      "platform": "x",
+      "by": "דיווח JPost",
+      "text": "The IDF said identities, roles and involvement of the anonymous speakers could not be verified.",
+      "emotion": "critical",
+      "bucket": "critical",
+      "url": "https://www.jpost.com/israel-news/article-908432",
+      "lang": "en"
+    },
+    {
+      "id": "naza-m-praise2",
+      "platform": "x",
+      "by": "AwardsWatch",
+      "text": "100. A gut-punch.",
+      "emotion": "praise",
+      "bucket": "support",
+      "url": "https://www.metacritic.com/movie/naza/",
+      "lang": "en"
+    },
+    {
+      "id": "naza-m-anger2",
+      "platform": "facebook",
+      "by": "מגיב",
+      "text": "מכרו את המדינה בשביל אריה זהב שלא ניתן להם.",
+      "emotion": "anger",
+      "bucket": "critical",
+      "url": "https://www.c14.co.il/article/1674997",
+      "lang": "he"
+    },
+    {
+      "id": "naza-m-grief2",
+      "platform": "x",
+      "by": "Venice audience note",
+      "text": "I still think the Nazis are evil, so what does that make me? — a testimony in the film.",
+      "emotion": "grief",
+      "bucket": "mixed",
+      "url": "https://www.timeout.com/movies/naza-review-2026",
+      "lang": "en"
+    }
+  ]
+}

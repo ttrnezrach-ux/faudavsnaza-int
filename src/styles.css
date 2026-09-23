@@ -1,0 +1,166 @@
+@import url("https://fonts.googleapis.com/css2?family=Frank+Ruhl+Libre:wght@500;600;700&family=Heebo:wght@400;500;600;700&family=Noto+Sans+Arabic:wght@400;500;600;700&display=swap");
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme {
+  --color-background: #0c0d0e;
+  --color-foreground: #eceae6;
+  --color-card: #141516;
+  --color-muted: #1c1d1f;
+  --color-secondary: #222325;
+  --color-border: color-mix(in oklab, var(--color-foreground) 12%, transparent);
+  --color-ring: #c8c4bc;
+  --color-primary: #eceae6;
+  --color-primary-foreground: #0c0d0e;
+  --color-secondary-foreground: #eceae6;
+  --color-muted-foreground: #9a9893;
+  --color-subtle: #b7b4ae;
+  --color-accent: #c8c4bc;
+  --color-heat: #d8d2c8;
+  --color-heat-soft: color-mix(in oklab, var(--color-heat) 16%, transparent);
+  --color-positive: #7d9b84;
+  --color-positive-soft: color-mix(in oklab, var(--color-positive) 18%, transparent);
+  --color-negative: #c45c4a;
+  --color-negative-soft: color-mix(in oklab, var(--color-negative) 18%, transparent);
+  --color-mixed: #a89a82;
+  --color-mixed-soft: color-mix(in oklab, var(--color-mixed) 18%, transparent);
+  --color-ocean: #080809;
+  --color-land: #1a1b1d;
+  --color-map-stroke: color-mix(in oklab, var(--color-foreground) 10%, transparent);
+
+  --font-sans: "Heebo", "Noto Sans Arabic", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Frank Ruhl Libre", "Heebo", serif;
+
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius: 12px;
+
+  --shadow-border: 0 0 0 1px color-mix(in oklab, var(--color-foreground) 8%, transparent);
+  --shadow-border-hover: 0 0 0 1px color-mix(in oklab, var(--color-foreground) 16%, transparent);
+
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --motion-quick: 150ms;
+  --motion-fast: 250ms;
+}
+
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  *:focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+  }
+
+  body {
+    background: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-sans);
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  .still {
+    outline: 1px solid color-mix(in oklab, var(--color-foreground) 10%, transparent);
+    outline-offset: -1px;
+  }
+}
+
+.skip-link {
+  position: absolute;
+  right: 1rem;
+  top: -100%;
+  z-index: 100;
+  border-radius: var(--radius-md);
+  background: var(--color-primary);
+  color: var(--color-primary-foreground);
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+}
+
+.skip-link:focus {
+  top: 0.75rem;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+
+html.a11y-contrast {
+  --color-background: #000000;
+  --color-foreground: #ffffff;
+  --color-card: #000000;
+  --color-muted: #1a1a1a;
+  --color-secondary: #1a1a1a;
+  --color-border: #ffffff;
+  --color-muted-foreground: #ffffff;
+  --color-subtle: #f0f0f0;
+  --color-primary: #ffffff;
+  --color-primary-foreground: #000000;
+  --color-heat: #ffffff;
+  --color-positive: #7cff9a;
+  --color-negative: #ff8a7a;
+  --color-mixed: #ffe08a;
+  --color-ocean: #000000;
+  --color-land: #2a2a2a;
+  --color-map-stroke: #ffffff;
+}
+
+html.a11y-readable {
+  --font-sans: Arial, "Noto Sans Hebrew", sans-serif;
+  --font-display: Arial, "Noto Sans Hebrew", sans-serif;
+}
+
+html.a11y-links a {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+html.a11y-pause *,
+html.a11y-pause *::before,
+html.a11y-pause *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+.rsm-svg {
+  width: 100%;
+  height: auto;
+  display: block;
+}

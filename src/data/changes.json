@@ -1,0 +1,86 @@
+{
+  "lastRunAt": "2026-09-20T19:32:00+03:00",
+  "slot": "manual",
+  "significant": true,
+  "noteHe": "גרסה 4.2 · עודכן 19:32 שעון ישראל. גרף FlixPatrol 14–20 בספטמבר: 253→62 נקודות, ממוצע #6→#8.",
+  "noteEn": "Version 4.2 · updated 19:32 Israel time. FlixPatrol graph 14–20 September: 253→62 points, average #6→#8.",
+  "wikiAt": "2026-09-15T09:58:47Z",
+  "deltas": [
+    {
+      "id": "AE",
+      "from": 4,
+      "to": 7,
+      "kind": "jump"
+    },
+    {
+      "id": "BD",
+      "from": 9,
+      "to": null,
+      "kind": "leave"
+    },
+    {
+      "id": "BE",
+      "from": 4,
+      "to": 7,
+      "kind": "jump"
+    },
+    {
+      "id": "BH",
+      "from": 5,
+      "to": 9,
+      "kind": "jump"
+    },
+    {
+      "id": "IN",
+      "from": 4,
+      "to": 8,
+      "kind": "jump"
+    },
+    {
+      "id": "JO",
+      "from": 3,
+      "to": 6,
+      "kind": "jump"
+    },
+    {
+      "id": "KW",
+      "from": 10,
+      "to": null,
+      "kind": "leave"
+    },
+    {
+      "id": "LK",
+      "from": 4,
+      "to": 6,
+      "kind": "jump"
+    },
+    {
+      "id": "MA",
+      "from": 5,
+      "to": 8,
+      "kind": "jump"
+    },
+    {
+      "id": "QA",
+      "from": 5,
+      "to": 8,
+      "kind": "jump"
+    },
+    {
+      "id": "SI",
+      "from": 6,
+      "to": 9,
+      "kind": "jump"
+    },
+    {
+      "id": "VE",
+      "from": null,
+      "to": 10,
+      "kind": "enter"
+    }
+  ],
+  "timezone": "Asia/Jerusalem",
+  "morning": "08:00",
+  "evening": "21:00",
+  "version": 42
+}

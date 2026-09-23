@@ -1,0 +1,301 @@
+{
+  "sampleSize": 28,
+  "facebookLocked": 456,
+  "facebookReactions": 4250,
+  "buckets": {
+    "support": 20,
+    "mixed": 3,
+    "critical": 5
+  },
+  "emotions": {
+    "grief": 7,
+    "praise": 6,
+    "tooHard": 1,
+    "sanitized": 3,
+    "anger": 4,
+    "solidarity": 2,
+    "critical": 5
+  },
+  "comments": [
+    {
+      "id": "fb-kotie",
+      "platform": "facebook",
+      "by": "Kotie van der Merwe",
+      "text": "Brilliant series. There are 2 episodes in Season 5 that make you realize what really happened on October 7th. It is truly heartbreaking.",
+      "emotion": "grief",
+      "bucket": "support",
+      "url": "https://www.facebook.com/FaudaOfficialIL/",
+      "lang": "en"
+    },
+    {
+      "id": "fb-hein",
+      "platform": "facebook",
+      "by": "Hein Swanevelder",
+      "text": "It is world wide the best !!! Am Israel chai",
+      "emotion": "praise",
+      "bucket": "support",
+      "url": "https://www.facebook.com/FaudaOfficialIL/",
+      "lang": "en"
+    },
+    {
+      "id": "x-ella",
+      "platform": "x",
+      "by": "Ella M",
+      "text": "Thank you for documenting the pure evil of the 7th. 3 years and I can’t get myself to watch your entire video.",
+      "emotion": "tooHard",
+      "bucket": "support",
+      "url": "https://x.com/IdoDaniel/status/2099124606141379051",
+      "lang": "en"
+    },
+    {
+      "id": "x-nervana",
+      "platform": "x",
+      "by": "Nervana Mahmoud",
+      "text": "Agree Ido. I think it sanitised reality, but still highlighting many aspects of it.",
+      "emotion": "sanitized",
+      "bucket": "mixed",
+      "url": "https://x.com/IdoDaniel/status/2099124606141379051",
+      "lang": "en"
+    },
+    {
+      "id": "x-valerie",
+      "platform": "x",
+      "by": "Valerie",
+      "text": "And we mustn't forget the foreign workers who were slaughtered too. Thailand, Tanzania, Nepalese, Filipino caregivers, a Cambodian student.",
+      "emotion": "anger",
+      "bucket": "support",
+      "url": "https://x.com/IdoDaniel/status/2099124606141379051",
+      "lang": "en"
+    },
+    {
+      "id": "x-saikumar",
+      "platform": "x",
+      "by": "saikumar",
+      "text": "My tears could not stop as I watched the horrific massacre. The world must never forget the lives that were lost.",
+      "emotion": "grief",
+      "bucket": "support",
+      "url": "https://x.com/IdoDaniel/status/2099124606141379051",
+      "lang": "en"
+    },
+    {
+      "id": "x-india",
+      "platform": "x",
+      "by": "saikumar",
+      "text": "As an Indian, I stand with the people of Israel and with all innocent victims of terrorism.",
+      "emotion": "solidarity",
+      "bucket": "support",
+      "url": "https://x.com/IdoDaniel/status/2099124606141379051",
+      "lang": "en"
+    },
+    {
+      "id": "x-njmom",
+      "platform": "x",
+      "by": "nj mom 32",
+      "text": "Will the media ever tell the truth of Palestinian crimes against humanity on 10/7?",
+      "emotion": "anger",
+      "bucket": "support",
+      "url": "https://x.com/IdoDaniel/status/2099124606141379051",
+      "lang": "en"
+    },
+    {
+      "id": "x-ciprian",
+      "platform": "x",
+      "by": "Ciprian Bujor",
+      "text": "Military response should be against military targets, not civilians, civilian infrastructure, journalists, children.",
+      "emotion": "critical",
+      "bucket": "critical",
+      "url": "https://x.com/IdoDaniel/status/2099124606141379051",
+      "lang": "en"
+    },
+    {
+      "id": "x-tania",
+      "platform": "x",
+      "by": "Tania Rappo",
+      "text": "À voir absolument ! Époustouflant.",
+      "emotion": "praise",
+      "bucket": "support",
+      "url": "https://x.com/Enthoven_R/status/2099405649121534136",
+      "lang": "fr"
+    },
+    {
+      "id": "x-kay",
+      "platform": "x",
+      "by": "Daniel Kay",
+      "text": "Fauda manages to show the hard truths without displaying the actual violence. And it worked brilliantly.",
+      "emotion": "praise",
+      "bucket": "support",
+      "url": "https://x.com/Enthoven_R/status/2099405649121534136",
+      "lang": "en"
+    },
+    {
+      "id": "x-coup",
+      "platform": "x",
+      "by": "Coup de grace",
+      "text": "Ni les enfants morts sous les bombes d’Israel",
+      "emotion": "critical",
+      "bucket": "critical",
+      "url": "https://x.com/Enthoven_R/status/2099405649121534136",
+      "lang": "fr"
+    },
+    {
+      "id": "x-jaco",
+      "platform": "x",
+      "by": "Jaco Pistorius",
+      "text": "Le tweet de la honte. Tu penses quoi de la directive Hannibal ? Dans les crimes que tu imputes au Hamas, certains ont été debunkés.",
+      "emotion": "critical",
+      "bucket": "critical",
+      "url": "https://x.com/Enthoven_R/status/2099405649121534136",
+      "lang": "fr"
+    },
+    {
+      "id": "x-nico",
+      "platform": "x",
+      "by": "NicoGms",
+      "text": "Oui oui allez va tepalycher sur ton génocidaire Netanyahou et ferme ta gueule",
+      "emotion": "critical",
+      "bucket": "critical",
+      "url": "https://x.com/Enthoven_R/status/2099405649121534136",
+      "lang": "fr"
+    },
+    {
+      "id": "x-jp",
+      "platform": "x",
+      "by": "Jean Pierre Rodriguez",
+      "text": "Les états ne se croient plus responsables des morts lorsqu'ils tuent en appuyant sur un bouton. Ils appellent ça victimes collatérales.",
+      "emotion": "critical",
+      "bucket": "critical",
+      "url": "https://x.com/Enthoven_R/status/2099405649121534136",
+      "lang": "fr"
+    },
+    {
+      "id": "x-isa",
+      "platform": "x",
+      "by": "Isa Fab",
+      "text": "Ces images sont moins nettes que celles filmées avec les GoPro du Hamas. Un problème technique à votre avis ?",
+      "emotion": "sanitized",
+      "bucket": "mixed",
+      "url": "https://x.com/Enthoven_R/status/2099405649121534136",
+      "lang": "fr"
+    },
+    {
+      "id": "x-alex",
+      "platform": "x",
+      "by": "Alex Granford",
+      "text": "It was very hard watching episodes 7 and 8 just after standing on the sites of October 7. That orange container where kids tried to hide is real and still stands at Nova.",
+      "emotion": "grief",
+      "bucket": "support",
+      "url": "https://x.com/simonmontefiore/status/2099435717067698408",
+      "lang": "en"
+    },
+    {
+      "id": "x-woland",
+      "platform": "x",
+      "by": "Woland's cat",
+      "text": "It's very good, even if the Oct 7 episodes show 5% of the truth. What's incredible is that even 5% is hideous.",
+      "emotion": "sanitized",
+      "bucket": "mixed",
+      "url": "https://x.com/simonmontefiore/status/2099435717067698408",
+      "lang": "en"
+    },
+    {
+      "id": "x-harry",
+      "platform": "x",
+      "by": "Harry One",
+      "text": "If you truly want to understand history, then read the fiction of the era in question.",
+      "emotion": "praise",
+      "bucket": "support",
+      "url": "https://x.com/simonmontefiore/status/2099435717067698408",
+      "lang": "en"
+    },
+    {
+      "id": "x-kevin",
+      "platform": "x",
+      "by": "Kevin cubbin",
+      "text": "You can not unsee what the religion of peace did ….from a Christian",
+      "emotion": "anger",
+      "bucket": "support",
+      "url": "https://x.com/IdoDaniel/status/2099124606141379051",
+      "lang": "en"
+    },
+    {
+      "id": "tt-fauda285-c",
+      "platform": "tiktok",
+      "by": "fauda285",
+      "text": "דורון הגואט. העונה החמישית של פאודה — דורון קביליו המלך.",
+      "emotion": "praise",
+      "bucket": "support",
+      "url": "https://www.tiktok.com/discover/%D7%A4%D7%90%D7%95%D7%93%D7%94-%D7%A2%D7%95%D7%A0%D7%94-5",
+      "lang": "he"
+    },
+    {
+      "id": "tt-steve-c",
+      "platform": "tiktok",
+      "by": "greenapplelollipopp",
+      "text": "הרג אותי איך שהוא אמר סטיב וראו שהוא שיקר.",
+      "emotion": "grief",
+      "bucket": "support",
+      "url": "https://www.tiktok.com/tag/%D7%A4%D7%90%D7%95%D7%93%D7%94%D7%A2%D7%95%D7%A0%D7%94-5",
+      "lang": "he"
+    },
+    {
+      "id": "x-ritvik-c",
+      "platform": "x",
+      "by": "Raj",
+      "text": "Episode 7 and 8 of season 5 was so intense, it showed reality of 7th October, it was so painful to watch.",
+      "emotion": "grief",
+      "bucket": "support",
+      "url": "https://x.com/Ritvik_raj/status/2099459094889529544",
+      "lang": "en"
+    },
+    {
+      "id": "x-ann-c",
+      "platform": "x",
+      "by": "AnnMSoul58",
+      "text": "Season 5 depicted October 7 massacres was very disturbing and really upsetting. Was in tears for most of it.",
+      "emotion": "grief",
+      "bucket": "support",
+      "url": "https://x.com/ann_burbid89083/status/2099157619789254923",
+      "lang": "en"
+    },
+    {
+      "id": "x-isaac-c",
+      "platform": "x",
+      "by": "Isaac",
+      "text": "Los episodios 7 y 8 están mostrando al mundo una parte del horror que vivió Israel. Y muchos empiezan a entender: la realidad fue infinitamente peor.",
+      "emotion": "grief",
+      "bucket": "support",
+      "url": "https://x.com/isaacrrr7/status/2099112566463062067",
+      "lang": "es"
+    },
+    {
+      "id": "x-ben-c",
+      "platform": "x",
+      "by": "Ben",
+      "text": "After watching FAUDA I can say that whatever the Israelis did afterwards was justifiable to save her citizens. Terror anywhere is terror everywhere.",
+      "emotion": "anger",
+      "bucket": "support",
+      "url": "https://x.com/stbenjaminA/status/2099118273916739706",
+      "lang": "en"
+    },
+    {
+      "id": "x-mirisch-c",
+      "platform": "x",
+      "by": "John Mirisch",
+      "text": "The fictional Fauda Season 5 contains more truth than the documentary Naza. The world needs more Fauda.",
+      "emotion": "praise",
+      "bucket": "support",
+      "url": "https://x.com/JohnMirisch/status/2099465763237372366",
+      "lang": "en"
+    },
+    {
+      "id": "x-iton-c",
+      "platform": "x",
+      "by": "ITON GADOL",
+      "text": "Agradecer a los creadores de FAUDA por dejar un gran registro de la masacre del 7 de octubre para las futuras generaciones.",
+      "emotion": "solidarity",
+      "bucket": "support",
+      "url": "https://x.com/Itongadol/status/2098985513197650239",
+      "lang": "es"
+    }
+  ]
+}

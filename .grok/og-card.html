@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      @font-face {
+        font-family: "Frank Ruhl Libre";
+        src: url("fonts/FrankRuhlLibre.ttf") format("truetype");
+        font-weight: 100 900;
+        font-display: block;
+      }
+      @font-face {
+        font-family: "Heebo";
+        src: url("fonts/Heebo.ttf") format("truetype");
+        font-weight: 100 900;
+        font-display: block;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body {
+        width: 1200px;
+        height: 630px;
+        overflow: hidden;
+        background: #0c0d0e;
+        color: #eceae6;
+      }
+      body {
+        font-family: Heebo, sans-serif;
+        position: relative;
+      }
+      .map {
+        position: absolute;
+        inset: 0 0 auto 0;
+        height: 360px;
+        background: url("og-map-strip.jpg") center 22% / 1200px auto no-repeat;
+        opacity: 0.88;
+      }
+      .scrim {
+        position: absolute;
+        inset: 0;
+        background:
+          linear-gradient(
+            to bottom,
+            rgba(12, 13, 14, 0.12) 0%,
+            rgba(12, 13, 14, 0.28) 26%,
+            rgba(12, 13, 14, 0.82) 54%,
+            #0c0d0e 64%
+          );
+      }
+      .grain {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.16;
+        mix-blend-mode: overlay;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      }
+      .frame {
+        position: absolute;
+        inset: 26px;
+        border: 1px solid rgba(216, 210, 200, 0.14);
+        pointer-events: none;
+      }
+      main {
+        position: relative;
+        z-index: 2;
+        height: 630px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 84px 96px 56px;
+        gap: 18px;
+      }
+      .kicker {
+        font-family: Heebo, sans-serif;
+        font-weight: 500;
+        font-size: 17px;
+        letter-spacing: 0.22em;
+        color: #a89a82;
+      }
+      .split {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: auto;
+        max-width: 820px;
+        gap: 6px;
+      }
+      .side {
+        flex: 0 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        gap: 12px;
+        padding: 4px 18px;
+      }
+      h1 {
+        font-family: "Frank Ruhl Libre", serif;
+        font-weight: 700;
+        font-variation-settings: "wght" 700;
+        font-size: 96px;
+        line-height: 0.94;
+        letter-spacing: -0.03em;
+        color: #eceae6;
+        white-space: nowrap;
+      }
+      .side.naza h1 { color: #d8d2c8; }
+      .sub {
+        font-family: Heebo, sans-serif;
+        font-weight: 500;
+        font-size: 16px;
+        color: #a89a82;
+        white-space: nowrap;
+      }
+      .side.fauda .sub { color: #7d9b84; }
+      .side.naza .sub { color: #c45c4a; }
+      .gutter {
+        width: 72px;
+        flex: 0 0 72px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+      }
+      .gutter::before,
+      .gutter::after {
+        content: "";
+        width: 1px;
+        height: 28px;
+        background: #a89a82;
+        opacity: 0.5;
+      }
+      .foot {
+        margin-top: 6px;
+        font-family: "Frank Ruhl Libre", serif;
+        font-weight: 600;
+        font-variation-settings: "wght" 600;
+        font-size: 28px;
+        color: #eceae6;
+        letter-spacing: 0.02em;
+      }
+      .foot span { color: #a89a82; padding: 0 12px; font-family: Heebo, sans-serif; font-size: 18px; }
+    </style>
+  </head>
+  <body>
+    <div class="map" aria-hidden="true"></div>
+    <div class="scrim" aria-hidden="true"></div>
+    <div class="grain" aria-hidden="true"></div>
+    <div class="frame" aria-hidden="true"></div>
+    <main>
+      <p class="kicker">אותה מתודולוגיה · שתי יצירות</p>
+      <div class="split">
+        <div class="side fauda">
+          <h1>פאודה 5</h1>
+          <p class="sub">נטפליקס · עונה חמישית</p>
+        </div>
+        <div class="gutter" aria-hidden="true">
+          <svg width="36" height="26" viewBox="0 0 36 26" fill="none">
+            <path d="M3 2 L16 13 L3 24 Z" fill="#eceae6"/>
+            <path d="M33 2 L20 13 L33 24 Z" fill="#d8d2c8"/>
+          </svg>
+        </div>
+        <div class="side naza">
+          <h1>נז״א</h1>
+          <p class="sub">תיעודי · ונציה</p>
+        </div>
+      </div>
+      <p class="foot">פאודה 5 · נז״א<span>מפת שיח עולמית</span></p>
+    </main>
+  </body>
+</html>
