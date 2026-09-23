@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { patchSearch } from "@/lib/view-url";
 
 export const LOCALES = ["he", "en", "ar", "fr", "es", "ru"] as const;
 export type Locale = (typeof LOCALES)[number];
@@ -309,6 +310,24 @@ const he: Dict = {
   funnelExplore: "חקר מפה ומדינה",
   funnelShare: "שיתוף",
   funnelOffice: "בקאופיס",
+  funnelHint: "המרה משלב לשלב (האחוז בין השלבים) וגם החלק מתוך הכניסה לטור.",
+  funnelStepRate: "{n}% מהשלב הקודם",
+  funnelOfLand: "{n}% מהכניסה",
+  breakdownTitle: "פיצול יצירה, לשונית ושפה",
+  breakdownHint: "כניסות לעמוד הראשי. מעבר בין יצירה, לשונית או שפה נספר ככניסה.",
+  workBreakdown: "לפי יצירה",
+  workBreakdownHint: "פאודה, נז״א או השוואה.",
+  tabBreakdown: "לפי לשונית",
+  tabBreakdownHint: "מפה, רשתות, אלגוריתם או מסקנות.",
+  langBreakdown: "לפי שפה",
+  langBreakdownHint: "שפת הממשק בזמן הכניסה.",
+  dimUnknown: "לפני המעקב",
+  dimPending: "{n} כניסות נרשמו לפני הפיצול הזה. ביקורים חדשים יופיעו בגרף.",
+  officeLoading: "טוען נתונים…",
+  kpiDelta: "{n}% לעומת התקופה הקודמת",
+  kpiDeltaFlat: "ללא שינוי מהתקופה הקודמת",
+  kpiDeltaNew: "אין תקופה קודמת להשוואה",
+  shareStepOpen: "פתיחת לוח השיתוף",
   deviceMobile: "נייד",
   deviceDesktop: "מחשב",
   deviceTablet: "טאבלט",
@@ -906,6 +925,24 @@ const en: Dict = {
   funnelExplore: "Explored map / country",
   funnelShare: "Shared",
   funnelOffice: "Back office",
+  funnelHint: "Step-to-step conversion (the percent between steps) and each step’s share of landings.",
+  funnelStepRate: "{n}% from the previous step",
+  funnelOfLand: "{n}% of landings",
+  breakdownTitle: "Work, tab, and language",
+  breakdownHint: "Homepage visits. Switching work, tab, or language counts as a visit.",
+  workBreakdown: "By work",
+  workBreakdownHint: "Fauda, NAZA, or compare.",
+  tabBreakdown: "By tab",
+  tabBreakdownHint: "Map, networks, algorithm, or findings.",
+  langBreakdown: "By language",
+  langBreakdownHint: "Interface language at the time of the visit.",
+  dimUnknown: "Before tracking",
+  dimPending: "{n} visits were recorded before this split. New visits show up on the chart.",
+  officeLoading: "Loading data…",
+  kpiDelta: "{n}% vs the previous period",
+  kpiDeltaFlat: "No change vs the previous period",
+  kpiDeltaNew: "No previous period to compare",
+  shareStepOpen: "Opened the share panel",
   deviceMobile: "Mobile",
   deviceDesktop: "Desktop",
   deviceTablet: "Tablet",
@@ -2201,10 +2238,13 @@ export function I18nProvider({ children, initialLocale }: { children: ReactNode;
       t,
       setLocale: (next) => {
         setLocaleState(next);
-        const url = new URL(window.location.href);
-        if (next === "he") url.searchParams.delete("lang");
-        else url.searchParams.set("lang", next);
-        window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+        const meta = LOCALE_META[next];
+        document.documentElement.lang = next;
+        document.documentElement.dir = meta.dir;
+        patchSearch((params) => {
+          if (next === "he") params.delete("lang");
+          else params.set("lang", next);
+        });
       },
     }),
     [locale, t],

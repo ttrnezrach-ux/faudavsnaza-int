@@ -121,6 +121,10 @@ export type OfficeStats = {
   funnel: { land: number; explore: number; share: number; office: number };
   goals: GoalStat[];
   durationBuckets: NamedCount[];
+  works: NamedCount[];
+  tabs: NamedCount[];
+  langs: NamedCount[];
+  prior: { visits: number; unique: number };
 };
 
 const visitorInput = z.object({
@@ -147,6 +151,8 @@ const behaviorInput = z.object({
   landing: z.string().regex(/^\/[a-z0-9/_-]{0,63}$/).optional(),
   googleProduct: z.enum(["search", "news", "images", "ads", "maps", "other"]).optional(),
   campaign: z.string().regex(/^[a-zA-Z0-9._-]{1,64}$/).optional(),
+  work: z.enum(["fauda", "naza", "compare"]).optional(),
+  contentTab: z.enum(["map", "social", "algo", "concl"]).optional(),
 });
 
 function countryFromHeaders(timezone?: string): string | null {
@@ -291,9 +297,11 @@ export const recordBehavior = createServerFn({ method: "POST" })
         pageviews = sessions.pageviews + ${data.kind === "page" ? 1 : 0},
         events = sessions.events + ${data.kind === "event" ? 1 : 0}
     `;
+    const work = data.work ?? null;
+    const contentTab = data.contentTab ?? null;
     await sql`
-      insert into behavior_events (visitor_key, session_key, kind, name, device, source, locale, country_code, ip_hash, ip_hint, created_at)
-      values (${data.visitorKey}, ${data.sessionKey}, ${data.kind}, ${data.name}, ${device}, ${source}, ${locale}, ${country}, ${ipHash}, ${ipHint}, now())
+      insert into behavior_events (visitor_key, session_key, kind, name, device, source, locale, country_code, ip_hash, ip_hint, work, content_tab, created_at)
+      values (${data.visitorKey}, ${data.sessionKey}, ${data.kind}, ${data.name}, ${device}, ${source}, ${locale}, ${country}, ${ipHash}, ${ipHint}, ${work}, ${contentTab}, now())
     `;
     return { ok: true as const };
   });
@@ -367,13 +375,15 @@ function fillDualMonths(rows: DualHour[]): DualHour[] {
   return out;
 }
 
+function windowMs(range: OfficeRange): number {
+  if (range === "day") return 24 * 3600_000;
+  if (range === "week") return 7 * 86_400_000;
+  if (range === "month") return 30 * 86_400_000;
+  return 365 * 86_400_000;
+}
+
 function sinceFor(range: OfficeRange): Date {
-  const d = new Date();
-  if (range === "day") d.setTime(d.getTime() - 24 * 3600_000);
-  else if (range === "week") d.setTime(d.getTime() - 7 * 86_400_000);
-  else if (range === "month") d.setTime(d.getTime() - 30 * 86_400_000);
-  else d.setTime(d.getTime() - 365 * 86_400_000);
-  return d;
+  return new Date(Date.now() - windowMs(range));
 }
 
 function fillSeries(range: OfficeRange, rows: DualHour[]): DualHour[] {
@@ -474,6 +484,7 @@ export const getOfficeStats = createServerFn({ method: "GET" })
   }
   const range = data.range;
   const since = sinceFor(range);
+  const priorSince = new Date(since.getTime() - windowMs(range));
   const sql = await getSql();
   const empty: OfficeStats = {
     total: 0,
@@ -504,6 +515,10 @@ export const getOfficeStats = createServerFn({ method: "GET" })
     funnel: { land: 0, explore: 0, share: 0, office: 0 },
     goals: [],
     durationBuckets: [],
+    works: [],
+    tabs: [],
+    langs: [],
+    prior: { visits: 0, unique: 0 },
   };
   try {
     const [summary] = await sql<{
@@ -520,6 +535,8 @@ export const getOfficeStats = createServerFn({ method: "GET" })
       all_time_unique: number;
       period_visits: number;
       period_unique: number;
+      prior_visits: number;
+      prior_unique: number;
     }>`
     select
       (select count(*)::int from unique_ips) as total,
@@ -534,7 +551,9 @@ export const getOfficeStats = createServerFn({ method: "GET" })
       (select coalesce(sum(visit_count), 0)::int from unique_ips) as all_time_visits,
       (select count(*)::int from unique_ips) as all_time_unique,
       (select count(*)::int from sessions where started_at > ${since}) as period_visits,
-      (select count(distinct ip_hash)::int from unique_ips where last_seen > ${since}) as period_unique
+      (select count(distinct ip_hash)::int from unique_ips where last_seen > ${since}) as period_unique,
+      (select count(*)::int from sessions where started_at > ${priorSince} and started_at <= ${since}) as prior_visits,
+      (select count(*)::int from unique_ips where last_seen > ${priorSince} and last_seen <= ${since}) as prior_unique
   `;
   let countries = await sql<CountryStat>`
     select
@@ -773,7 +792,7 @@ export const getOfficeStats = createServerFn({ method: "GET" })
     select
       (select count(distinct visitor_key)::int from behavior_events where kind = 'page' and name = '/' and created_at > ${since}) as land,
       (select count(distinct visitor_key)::int from behavior_events where (name like 'tab:%' or name like 'country:%') and created_at > ${since}) as explore,
-      (select count(distinct visitor_key)::int from behavior_events where name like 'share:%' and created_at > ${since}) as share,
+      (select count(distinct visitor_key)::int from behavior_events where name like 'share:%' and name <> 'share:step:open' and created_at > ${since}) as share,
       (select count(distinct visitor_key)::int from behavior_events where name in ('nav:office', '/office') and created_at > ${since}) as office
   `;
   const [goalRow] = await sql<{
@@ -788,11 +807,32 @@ export const getOfficeStats = createServerFn({ method: "GET" })
         where s.started_at > ${since} and s.source = 'google'
           and exists (
             select 1 from behavior_events e
-            where e.session_key = s.session_key and e.name like 'share:%' and e.created_at > ${since}
+            where e.session_key = s.session_key and e.name like 'share:%' and e.name <> 'share:step:open' and e.created_at > ${since}
           )
       ) as google_share,
       (select count(*)::int from sessions where started_at > ${since} and extract(epoch from (last_seen - started_at)) >= 30) as duration,
       (select count(*)::int from sessions where started_at > ${since} and pageviews >= 2) as engaged
+  `;
+  const works = await sql<NamedCount>`
+    select coalesce(nullif(work, ''), 'unknown') as name, count(*)::int as count
+    from behavior_events
+    where kind = 'page' and name = '/' and created_at > ${since}
+    group by 1
+    order by count desc
+  `;
+  const tabs = await sql<NamedCount>`
+    select coalesce(nullif(content_tab, ''), 'unknown') as name, count(*)::int as count
+    from behavior_events
+    where kind = 'page' and name = '/' and created_at > ${since}
+    group by 1
+    order by count desc
+  `;
+  const langs = await sql<NamedCount>`
+    select coalesce(nullif(locale, ''), 'unknown') as name, count(*)::int as count
+    from behavior_events
+    where kind = 'page' and name = '/' and created_at > ${since}
+    group by 1
+    order by count desc
   `;
   const durationBuckets = await sql<NamedCount>`
     select name, count(*)::int as count from (
@@ -870,6 +910,13 @@ export const getOfficeStats = createServerFn({ method: "GET" })
       { id: "engaged", completions: goalRow?.engaged ?? 0 },
     ],
     durationBuckets,
+    works,
+    tabs,
+    langs,
+    prior: {
+      visits: Number(summary?.prior_visits ?? 0),
+      unique: Number(summary?.prior_unique ?? 0),
+    },
   };
   return stats;
   } catch {

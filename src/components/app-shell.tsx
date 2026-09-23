@@ -5,8 +5,9 @@ import { LanguageSwitcher } from "@/components/language-switcher";
 import { I18nProvider, useI18n } from "@/lib/i18n";
 import { WorkProvider } from "@/lib/work";
 import { parseShareLang } from "@/lib/seo";
-import { isWorkViewParam, isContentTab } from "@/lib/share";
+import { isWorkViewParam } from "@/lib/share";
 import { trackPage } from "@/lib/track";
+import { VIEW_EVENT } from "@/lib/view-url";
 import { VersionStamp } from "@/components/version-stamp";
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -25,17 +26,23 @@ export function AppShell({ children }: { children: ReactNode }) {
 function ShellFrame({ children }: { children: ReactNode }) {
   const { t, locale } = useI18n();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
-  const search = useRouterState({
-    select: (s) => s.location.search as { work?: string; tab?: string },
-  });
 
   useEffect(() => {
-    const path =
-      pathname === "/" || pathname === "/office" || pathname === "/accessibility" ? pathname : "/other";
-    const work = isWorkViewParam(search.work) ? search.work : "compare";
-    const tab = isContentTab(search.tab) ? search.tab : "map";
-    trackPage(path, locale, { content_group: work, item_id: tab });
-  }, [pathname, locale, search.work, search.tab]);
+    const send = () => {
+      const path =
+        pathname === "/" || pathname === "/office" || pathname === "/accessibility" ? pathname : "/other";
+      const lang = document.documentElement.lang;
+      const active = /^[a-z]{2}$/.test(lang) ? lang : locale;
+      trackPage(path, active);
+    };
+    send();
+    window.addEventListener(VIEW_EVENT, send);
+    window.addEventListener("popstate", send);
+    return () => {
+      window.removeEventListener(VIEW_EVENT, send);
+      window.removeEventListener("popstate", send);
+    };
+  }, [pathname, locale]);
 
   return (
     <>

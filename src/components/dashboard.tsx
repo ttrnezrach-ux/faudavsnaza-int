@@ -43,6 +43,7 @@ import { countryDisplayName, flagEmoji } from "@/lib/geo";
 import { screeningFromHover } from "@/lib/naza-screenings";
 import { trackClick } from "@/lib/track";
 import { isContentTab, type ContentTab } from "@/lib/share";
+import { patchSearch } from "@/lib/view-url";
 import {
   inTop10,
   isTalkOnly,
@@ -277,15 +278,18 @@ export function Dashboard() {
   }, []);
 
   function writeTabParam(next: ContentTab) {
-    const url = new URL(window.location.href);
-    if (next === "map") url.searchParams.delete("tab");
-    else url.searchParams.set("tab", next);
-    window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+    patchSearch((params) => {
+      if (next === "map") params.delete("tab");
+      else params.set("tab", next);
+    });
   }
 
   function goView(next: "map" | "social" | "share" | "algo" | "concl") {
     setView(next);
     trackClick(`nav:${next}`);
+    if (next === "social") trackClick(`social:open:${workView}`);
+    if (next === "concl") trackClick("concl:open");
+    if (next === "share") trackClick("share:step:open");
     if (isContentTab(next)) {
       setShareTab(next);
       writeTabParam(next);
@@ -365,9 +369,15 @@ export function Dashboard() {
                   role="radio"
                   aria-checked={workView === id}
                   onClick={() => {
-                    setWorkView(id);
+                    setWorkView(id, { patch: false });
+                    setView("map");
+                    setShareTab("map");
                     trackClick(`work:${id}`);
-                    goView("map");
+                    trackClick("nav:map");
+                    patchSearch((params) => {
+                      params.set("work", id);
+                      params.delete("tab");
+                    });
                   }}
                   className={cn(
                     "inline-flex h-11 items-center gap-2 rounded-md px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",

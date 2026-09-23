@@ -9,7 +9,7 @@ import { getOfficeStats, type IpHit, type NamedCount, type OfficeRange, type Off
 import { LIVE } from "@/lib/live";
 import { listLiveRuns, runLiveIngest, type LiveRun } from "@/lib/ingest";
 import { trackClick } from "@/lib/track";
-import { OfficeVisuals, GoogleArrivalCharts, AnalyticsGoals } from "@/components/traffic-chart";
+import { OfficeVisuals, GoogleArrivalCharts, AnalyticsGoals, ClickDonut, FunnelLadder, DimensionCharts, DualHourChart } from "@/components/traffic-chart";
 import { OfficeOverview } from "@/components/office-overview";
 import { VersionStamp } from "@/components/version-stamp";
 import { WeekScan } from "@/components/week-scan";
@@ -19,49 +19,65 @@ export const Route = createFileRoute("/office")({
   component: OfficePage,
 });
 
+function workShort(id: string | undefined, t: (k: string) => string) {
+  if (id === "fauda") return t("workFaudaShort");
+  if (id === "naza") return t("workNazaShort");
+  if (id === "compare") return t("workCompare");
+  return id ?? "";
+}
+
+function tabShort(id: string | undefined, t: (k: string) => string) {
+  if (id === "map" || id === "list") return t("navMap");
+  if (id === "social") return t("navSocialShort");
+  if (id === "algo") return t("navAlgo");
+  if (id === "concl") return t("navConcl");
+  if (id === "search") return t("tabSearch");
+  if (id === "iso") return t("tabIso");
+  if (id === "quotes") return t("tabQuotes");
+  if (id === "regions") return t("tabRegions");
+  return id ?? "";
+}
+
+function netName(id: string | undefined, t: (k: string) => string) {
+  if (id === "whatsapp") return t("netWhatsapp");
+  if (id === "facebook") return t("netFacebook");
+  if (id === "x") return t("netX");
+  if (id === "telegram") return t("netTelegram");
+  if (id === "linkedin") return t("netLinkedin");
+  if (id === "mail") return t("netMail");
+  if (id === "tiktok") return t("netTiktok");
+  if (id === "instagram") return t("netInstagram");
+  if (id === "all") return t("socialAll");
+  return id ?? "";
+}
+
 function clickLabel(target: string, locale: string, t: (k: string) => string): string {
-  const [kind, rest] = target.split(":");
+  const parts = target.split(":");
+  const kind = parts[0] ?? "";
+  const rest = parts.slice(1).join(":");
   if (kind === "share") {
-    const map: Record<string, string> = {
-      whatsapp: t("netWhatsapp"),
-      facebook: t("netFacebook"),
-      x: t("netX"),
-      telegram: t("netTelegram"),
-      linkedin: t("netLinkedin"),
-      mail: t("netMail"),
-      copy: t("shareCopy"),
-      native: t("shareNative"),
-      card: t("sharePreview"),
-    };
-    return map[rest] ?? target;
+    const [step, detail] = parts.slice(1);
+    if (step === "step" && detail === "open") return t("shareStepOpen");
+    if (step === "work") return `${t("sharePickWork")} · ${workShort(detail, t)}`;
+    if (step === "tab") return `${t("sharePickTab")} · ${tabShort(detail, t)}`;
+    if (step === "copy") return detail ? `${t("shareCopy")} · ${tabShort(detail, t)}` : t("shareCopy");
+    if (step === "native") return t("shareNative");
+    if (step === "card") return t("sharePreview");
+    if (detail) return `${netName(step, t)} · ${tabShort(detail, t)}`;
+    return netName(step, t) || target;
   }
-  if (kind === "tab") {
-    const map: Record<string, string> = {
-      list: t("tabCountries"),
-      search: t("tabSearch"),
-      iso: t("tabIso"),
-      quotes: t("tabQuotes"),
-      social: t("tabSocial"),
-      regions: t("tabRegions"),
-    };
-    return map[rest] ?? target;
-  }
+  if (kind === "tab") return tabShort(rest, t) || target;
   if (kind === "lang") {
     return LOCALE_META[rest as keyof typeof LOCALE_META]?.native ?? rest.toUpperCase();
   }
   if (kind === "country") {
     return `${flagEmoji(rest)} ${countryDisplayName(rest, locale)}`;
   }
-  if (kind === "work") {
-    if (rest === "fauda") return t("workFaudaShort");
-    if (rest === "naza") return t("workNazaShort");
-    if (rest === "compare") return t("workCompare");
-    return rest;
-  }
+  if (kind === "work") return workShort(rest, t) || rest;
   if (kind === "nav") {
     if (rest === "office") return t("office");
     if (rest === "map") return t("navMap");
-    if (rest === "social") return t("tabSocial");
+    if (rest === "social") return t("navSocialShort");
     if (rest === "share") return t("navShare");
     if (rest === "algo") return t("navAlgo");
     if (rest === "concl") return t("navConcl");
@@ -72,15 +88,26 @@ function clickLabel(target: string, locale: string, t: (k: string) => string): s
     const label = t(key);
     return label === key ? rest : label;
   }
-  if (kind === "source") {
-    return rest;
+  if (kind === "source") return rest;
+  if (kind === "social-tab") {
+    const [work, platform] = parts.slice(1);
+    return `${workShort(work, t)} · ${netName(platform, t)}`;
   }
   if (kind === "social") {
-    if (rest === "facebook") return t("netFacebook");
-    if (rest === "x") return t("netX");
-    if (rest === "tiktok") return t("netTiktok");
-    return t("netInstagram");
+    const [a, b] = parts.slice(1);
+    if (a === "translate") return rest;
+    if (a === "next") return t("socialNextCta");
+    if (a === "open") return `${t("navSocialShort")} · ${workShort(b, t)}`;
+    if (b) return `${workShort(a, t)} · ${netName(b, t)}`;
+    return netName(a, t) || target;
   }
+  if (kind === "comment") {
+    const [a, b] = parts.slice(1);
+    if (b) return `${workShort(a, t)} · ${netName(b, t)}`;
+    return netName(a, t) || target;
+  }
+  if (kind === "concl" && rest === "open") return t("conclOpen");
+  if (kind === "viz" && parts[1] === "platform") return `${t("navSocialShort")} · ${netName(parts[2], t)}`;
   return target;
 }
 
@@ -125,20 +152,42 @@ function OfficeBody() {
   const [range, setRange] = useState<OfficeRange>("week");
   const [stats, setStats] = useState<OfficeStats | null>(null);
   const [failed, setFailed] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   const load = useCallback(() => {
     setFailed(false);
+    setLoading(true);
     void getOfficeStats({ data: { range } })
       .then(setStats)
-      .catch(() => setFailed(true));
+      .catch(() => setFailed(true))
+      .finally(() => setLoading(false));
   }, [range]);
 
   useEffect(() => {
     trackClick("nav:office");
+  }, []);
+
+  useEffect(() => {
     load();
   }, [load]);
 
-  const funnelMax = Math.max(1, stats?.funnel.land ?? 1);
+  const hourlyTitle =
+    range === "year"
+      ? t("trafficHourlyYear")
+      : range === "week"
+        ? t("trafficHourlyWeek")
+        : range === "month"
+          ? t("trafficHourlyMonth")
+          : t("trafficHourly");
+
+  function deltaLabel(current?: number, prior?: number) {
+    if (current == null || prior == null) return undefined;
+    if (!prior) return current ? { text: t("kpiDeltaNew"), tone: "flat" as const } : { text: t("kpiDeltaFlat"), tone: "flat" as const };
+    const pct = Math.round(((current - prior) / prior) * 100);
+    if (pct === 0) return { text: t("kpiDeltaFlat"), tone: "flat" as const };
+    const text = t("kpiDelta", { n: pct > 0 ? `+${pct}` : String(pct) });
+    return { text, tone: pct > 0 ? ("up" as const) : ("down" as const) };
+  }
 
   return (
     <div className="min-h-dvh bg-background text-foreground">
@@ -197,164 +246,139 @@ function OfficeBody() {
         </div>
       </header>
 
-      <main id="main" tabIndex={-1} className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 outline-none sm:px-6">
-        {failed ? (
-          <p className="text-sm text-muted-foreground">{t("noData")}</p>
+      <main id="main" tabIndex={-1} aria-busy={loading} className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 outline-none sm:px-6">
+        {failed ? <p className="text-sm text-muted-foreground">{t("noData")}</p> : null}
+        {loading && !stats ? (
+          <div className="space-y-4">
+            <p className="text-sm text-muted-foreground">{t("officeLoading")}</p>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {Array.from({ length: 4 }, (_, i) => (
+                <div key={i} className="h-20 animate-pulse rounded-xl bg-muted" />
+              ))}
+            </div>
+            <div className="h-56 animate-pulse rounded-2xl bg-muted" />
+          </div>
         ) : null}
-
-        <section className="grid grid-cols-2 gap-3 sm:grid-cols-4" aria-label={t("officeTitle")}>
-          <Kpi label={t("visitsAllTime")} value={stats?.allTimeVisits} locale={locale} />
-          <Kpi label={t("visitsUniqueAll")} value={stats?.allTimeUnique} locale={locale} />
-          <Kpi label={t("visitsPeriod")} value={stats?.periodVisits} locale={locale} />
-          <Kpi label={t("visitsUniquePeriod")} value={stats?.periodUnique} locale={locale} />
-        </section>
-        <p className="text-sm leading-relaxed text-muted-foreground">{t("visitsExplain")}</p>
-        {stats && stats.allTimeUnique > 0 ? (
-          <p className="text-xs text-muted-foreground">
-            {t("visitsPerUnique", {
-              n: (stats.allTimeVisits / stats.allTimeUnique).toLocaleString(locale, {
-                maximumFractionDigits: 1,
-              }),
-            })}
-          </p>
-        ) : null}
-        <p className="text-xs text-muted-foreground">
-          {range === "year"
-            ? t("lastYear")
-            : range === "month"
-              ? t("last30d")
-              : range === "week"
-                ? t("last7d")
-                : t("last24h")}
-        </p>
 
         {stats ? (
-          <OfficeOverview
-            stats={stats}
-            hourlyTitle={
-              range === "year"
-                ? t("trafficHourlyYear")
-                : range === "week"
-                  ? t("trafficHourlyWeek")
-                  : range === "month"
-                    ? t("trafficHourlyMonth")
-                    : t("trafficHourly")
-            }
-            labelClick={(target) => clickLabel(target, locale, t)}
-          />
-        ) : null}
-
-        <section className="space-y-4" aria-labelledby="behavior-heading">
-          <div>
-            <h2 id="behavior-heading" className="font-display text-xl font-medium">
-              {t("behaviorTitle")}
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">{t("behaviorHint")}</p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-6">
-            <Kpi label={t("sessions")} value={stats?.sessions} locale={locale} />
-            <Kpi label={t("bounce")} value={stats?.bounceRate} locale={locale} suffix="%" />
-            <Kpi label={t("pagesPerSession")} value={stats?.pagesPerSession} locale={locale} />
-            <Kpi label={t("avgTime")} display={stats ? formatTime(stats.avgSeconds) : undefined} locale={locale} />
-            <Kpi label={t("newUsers")} value={stats?.newUsers} locale={locale} />
-            <Kpi label={t("returning")} value={stats?.returning} locale={locale} />
-          </div>
-
-          <div className="grid gap-4 lg:grid-cols-2">
-            <BarCard
-              title={t("devicesTitle")}
-              rows={(stats?.devices ?? []).map((d) => ({ name: deviceLabel(d.name, t), count: d.count }))}
-              empty={t("noData")}
-              color="bg-heat"
-            />
-            <BarCard
-              title={t("sourcesTitle")}
-              rows={(stats?.sources ?? []).map((d) => ({ name: sourceLabel(d.name, t), count: d.count }))}
-              empty={t("noData")}
-              color="bg-positive"
-            />
-            <BarCard
-              title={t("pagesTitle")}
-              rows={(stats?.pages ?? []).map((d) => ({ name: pageLabel(d.name, t), count: d.count }))}
-              empty={t("noData")}
-              color="bg-mixed"
-            />
-            <section className="rounded-2xl bg-card p-4 shadow-[var(--shadow-border)] sm:p-5">
-              <h3 className="font-display text-lg font-medium">{t("funnelTitle")}</h3>
-              {!stats || stats.funnel.land === 0 ? (
-                <p className="mt-3 text-sm text-muted-foreground">{t("noData")}</p>
-              ) : (
-                <ul className="mt-3 space-y-3">
-                  {(
-                    [
-                      ["funnelLand", stats.funnel.land],
-                      ["funnelExplore", stats.funnel.explore],
-                      ["funnelShare", stats.funnel.share],
-                      ["funnelOffice", stats.funnel.office],
-                    ] as const
-                  ).map(([key, n]) => (
-                    <li key={key}>
-                      <div className="flex items-center justify-between gap-3 text-sm">
-                        <span className="font-medium">{t(key)}</span>
-                        <span className="tabular-nums text-muted-foreground">
-                          {n.toLocaleString(locale)} · {Math.round((n / funnelMax) * 100)}%
-                        </span>
-                      </div>
-                      <div className="mt-1 h-2 overflow-hidden rounded-full bg-muted">
-                        <span
-                          className="block h-full bg-negative"
-                          style={{ width: `${Math.max(6, (n / funnelMax) * 100)}%` }}
-                        />
-                      </div>
-                    </li>
-                  ))}
-                </ul>
-              )}
+          <>
+            <section className="grid grid-cols-2 gap-3 sm:grid-cols-4" aria-label={t("officeTitle")}>
+              <Kpi label={t("visitsAllTime")} value={stats.allTimeVisits} locale={locale} />
+              <Kpi label={t("visitsUniqueAll")} value={stats.allTimeUnique} locale={locale} />
+              <Kpi
+                label={t("visitsPeriod")}
+                value={stats.periodVisits}
+                locale={locale}
+                delta={deltaLabel(stats.periodVisits, stats.prior.visits)}
+              />
+              <Kpi
+                label={t("visitsUniquePeriod")}
+                value={stats.periodUnique}
+                locale={locale}
+                delta={deltaLabel(stats.periodUnique, stats.prior.unique)}
+              />
             </section>
-          </div>
-        </section>
+            <p className="text-sm leading-relaxed text-muted-foreground">{t("visitsExplain")}</p>
+            {stats.allTimeUnique > 0 ? (
+              <p className="text-xs text-muted-foreground">
+                {t("visitsPerUnique", {
+                  n: (stats.allTimeVisits / stats.allTimeUnique).toLocaleString(locale, {
+                    maximumFractionDigits: 1,
+                  }),
+                })}
+              </p>
+            ) : null}
+            <p className="text-xs text-muted-foreground">
+              {range === "year" ? t("lastYear") : range === "month" ? t("last30d") : range === "week" ? t("last7d") : t("last24h")}
+              {loading ? ` · ${t("officeLoading")}` : ""}
+            </p>
 
-        <AnalyticsGoals goals={stats?.goals ?? []} sessions={stats?.sessions ?? 0} />
+            <section className="rounded-2xl bg-card p-4 shadow-[var(--shadow-border)] sm:p-5">
+              <h2 className="font-display text-lg font-medium">{hourlyTitle}</h2>
+              <p className="mt-1 text-sm text-muted-foreground">{t("trafficHint")}</p>
+              <DualHourChart points={stats.hourlyDual} />
+            </section>
 
-        <GoogleArrivalCharts
-          data={
-            stats?.google ?? {
-              sessions: 0,
-              products: [],
-              hosts: [],
-              countries: [],
-              landings: [],
-              campaigns: [],
-            }
-          }
-        />
+            <section className="space-y-4" aria-labelledby="behavior-heading">
+              <div>
+                <h2 id="behavior-heading" className="font-display text-xl font-medium">
+                  {t("behaviorTitle")}
+                </h2>
+                <p className="mt-1 text-sm text-muted-foreground">{t("behaviorHint")}</p>
+              </div>
 
-        {stats ? (
-          <IpHitLog
-            hits={stats.ipHits}
-            labelPage={(name) => pageLabel(name, t)}
-          />
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+                <Kpi label={t("sessions")} value={stats.sessions} locale={locale} />
+                <Kpi label={t("bounce")} value={stats.bounceRate} locale={locale} suffix="%" />
+                <Kpi label={t("pagesPerSession")} value={stats.pagesPerSession} locale={locale} />
+                <Kpi label={t("avgTime")} display={formatTime(stats.avgSeconds)} locale={locale} />
+                <Kpi label={t("newUsers")} value={stats.newUsers} locale={locale} />
+                <Kpi label={t("returning")} value={stats.returning} locale={locale} />
+              </div>
+
+              <div className="grid gap-4 lg:grid-cols-2">
+                <section className="rounded-2xl bg-card p-4 shadow-[var(--shadow-border)] sm:p-5 lg:col-span-2">
+                  <h3 className="font-display text-lg font-medium">{t("funnelTitle")}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">{t("funnelHint")}</p>
+                  <FunnelLadder
+                    steps={[
+                      { key: "funnelLand", n: stats.funnel.land },
+                      { key: "funnelExplore", n: stats.funnel.explore },
+                      { key: "funnelShare", n: stats.funnel.share },
+                      { key: "funnelOffice", n: stats.funnel.office },
+                    ]}
+                  />
+                </section>
+                <section className="rounded-2xl bg-card p-4 shadow-[var(--shadow-border)] sm:p-5">
+                  <h3 className="font-display text-lg font-medium">{t("devicesTitle")}</h3>
+                  <div className="mt-3">
+                    <ClickDonut
+                      centerLabel={t("sessions")}
+                      slices={stats.devices.map((d) => ({ id: d.name, label: deviceLabel(d.name, t), count: d.count }))}
+                    />
+                  </div>
+                </section>
+                <section className="rounded-2xl bg-card p-4 shadow-[var(--shadow-border)] sm:p-5">
+                  <h3 className="font-display text-lg font-medium">{t("sourcesTitle")}</h3>
+                  <div className="mt-3">
+                    <ClickDonut
+                      centerLabel={t("sessions")}
+                      slices={stats.sources.map((d) => ({ id: d.name, label: sourceLabel(d.name, t), count: d.count }))}
+                    />
+                  </div>
+                </section>
+                <BarCard
+                  title={t("pagesTitle")}
+                  rows={stats.pages.map((d) => ({ name: pageLabel(d.name, t), count: d.count }))}
+                  empty={t("noData")}
+                  color="bg-mixed"
+                  className="lg:col-span-2"
+                />
+              </div>
+            </section>
+
+            <OfficeOverview stats={stats} labelClick={(target) => clickLabel(target, locale, t)} />
+
+            <DimensionCharts works={stats.works} tabs={stats.tabs} langs={stats.langs} />
+
+            <OfficeVisuals
+              countries={stats.countries}
+              hourly={stats.hourlyDual}
+              clickLeaders={stats.clickLeaders}
+              recentClicks={stats.recentClicks}
+              ipLeaders={stats.ipLeaders}
+              labelClick={(target) => clickLabel(target, locale, t)}
+              seriesTitle={hourlyTitle}
+              hideHourly
+            />
+
+            <IpHitLog hits={stats.ipHits} labelPage={(name) => pageLabel(name, t)} />
+
+            <AnalyticsGoals goals={stats.goals} sessions={stats.sessions} />
+
+            <GoogleArrivalCharts data={stats.google} />
+          </>
         ) : null}
-
-        <OfficeVisuals
-          countries={stats?.countries ?? []}
-          hourly={stats?.hourlyDual ?? []}
-          clickLeaders={stats?.clickLeaders ?? []}
-          recentClicks={stats?.recentClicks ?? []}
-          ipLeaders={stats?.ipLeaders ?? []}
-          labelClick={(target) => clickLabel(target, locale, t)}
-          seriesTitle={
-            range === "year"
-              ? t("trafficHourlyYear")
-              : range === "week"
-                ? t("trafficHourlyWeek")
-                : range === "month"
-                  ? t("trafficHourlyMonth")
-                  : t("trafficHourly")
-          }
-          hideHourly
-        />
 
         <VersionsPanel />
         <WeekScan />
@@ -427,15 +451,17 @@ function BarCard({
   rows,
   empty,
   color,
+  className,
 }: {
   title: string;
   rows: NamedCount[];
   empty: string;
   color: string;
+  className?: string;
 }) {
   const max = Math.max(1, ...rows.map((r) => r.count));
   return (
-    <section className="rounded-2xl bg-card p-4 shadow-[var(--shadow-border)] sm:p-5">
+    <section className={`rounded-2xl bg-card p-4 shadow-[var(--shadow-border)] sm:p-5 ${className ?? ""}`}>
       <h3 className="font-display text-lg font-medium">{title}</h3>
       {rows.length === 0 ? (
         <p className="mt-3 text-sm text-muted-foreground">{empty}</p>
@@ -464,12 +490,14 @@ function Kpi({
   locale,
   suffix,
   display,
+  delta,
 }: {
   label: string;
   value?: number;
   locale: string;
   suffix?: string;
   display?: string;
+  delta?: { text: string; tone: "up" | "down" | "flat" };
 }) {
   return (
     <div className="rounded-xl bg-card px-4 py-3 shadow-[var(--shadow-border)]">
@@ -477,6 +505,19 @@ function Kpi({
       <p className="mt-1 font-display text-2xl font-medium tabular-nums leading-tight">
         {display ?? (value == null ? "—" : `${value.toLocaleString(locale)}${suffix ?? ""}`)}
       </p>
+      {delta ? (
+        <p
+          className={
+            delta.tone === "up"
+              ? "mt-1 text-xs text-positive"
+              : delta.tone === "down"
+                ? "mt-1 text-xs text-negative"
+                : "mt-1 text-xs text-muted-foreground"
+          }
+        >
+          {delta.text}
+        </p>
+      ) : null}
     </div>
   );
 }
