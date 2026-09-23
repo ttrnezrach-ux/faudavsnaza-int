@@ -129,7 +129,7 @@ export function hashtagLine(lang: Locale | string | undefined, work: SeoWork = "
   return hashtagsFor(lang, work).join(" ");
 }
 
-export const FACEBOOK_SHARE_URL = "https://faudaint.grok.me/";
+export const FACEBOOK_SHARE_URL = "https://faudavsnaza-int.vercel.app/";
 
 export function shareCaption(lang: Locale = "he"): string {
   const seo = seoFor(lang);
@@ -137,7 +137,7 @@ export function shareCaption(lang: Locale = "he"): string {
 }
 
 export function sharePageUrl(lang: Locale = "he"): string {
-  const origin = (publicOrigin() || "https://faudaint.grok.me").replace(/\/$/, "");
+  const origin = (publicOrigin() || "https://faudavsnaza-int.vercel.app").replace(/\/$/, "");
   const u = new URL(`${origin}/`);
   u.searchParams.set("lang", lang);
   u.searchParams.set("work", "compare");
@@ -146,7 +146,7 @@ export function sharePageUrl(lang: Locale = "he"): string {
 }
 
 export function shareImageUrl(lang: Locale = "he"): string {
-  const origin = (publicOrigin() || "https://faudaint.grok.me").replace(/\/$/, "");
+  const origin = (publicOrigin() || "https://faudavsnaza-int.vercel.app").replace(/\/$/, "");
   return `${origin}/og-${lang}.jpg`;
 }
 
@@ -198,7 +198,7 @@ export function publicOrigin(): string {
 
 export function articleJsonLd(pageUrl: string, lang: Locale = "he", work: SeoWork = "compare") {
   const seo = seoFor(lang);
-  const origin = publicOrigin() || "https://faudaint.grok.me";
+  const origin = publicOrigin() || "https://faudavsnaza-int.vercel.app";
   const canonical = sharePageUrl(lang);
   const image = `${origin.replace(/\/$/, "")}/og-${lang}.jpg`;
   const tags = [...seo.tags, ...hashtagsFor(lang, work)];
