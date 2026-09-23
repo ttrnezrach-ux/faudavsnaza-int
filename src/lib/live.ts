@@ -15,10 +15,19 @@ type CountryLike = {
 
 export type LiveQuote = QuoteLike & { country: string };
 
+export type NetflixCountryWeeks = {
+  /** Week ending 20 Sep 2026 — official Netflix Tudum country top 10. */
+  weekEnding2026_09_20: Record<string, number>;
+  /** Week ending 13 Sep 2026 — only countries the Tudum pair actually listed. */
+  weekEnding2026_09_13: Record<string, number>;
+};
+
 export type LiveFile = {
   fetchedAt: string;
   source: string;
   snapshot: string;
+  /** Manual Netflix Tudum note. Daily `ranks` stay FlixPatrol. */
+  snapshotNote?: string;
   days: string[];
   global: {
     latest: number;
@@ -27,6 +36,20 @@ export type LiveFile = {
     points: number;
     top10Countries: number;
     firstPlaces: number;
+    /** This block is FlixPatrol chart position, not Netflix hours. */
+    metric?: "flixpatrol";
+  };
+  netflix?: {
+    source: string;
+    note: string;
+    top10Countries: number;
+    firstPlaces: number;
+    firstPlaceCountries: string[];
+    views: {
+      opening: { from: string; to: string; viewsM: string; hoursM: string; nonEnglishTv: number; runtime: string; weeksInTop10: number };
+      latest: { from: string; to: string; viewsM: string; hoursM: string; nonEnglishTv: number; runtime: string; weeksInTop10: number };
+    };
+    countryRanks: NetflixCountryWeeks;
   };
   ranks: Record<string, (number | null)[]>;
   quotes: LiveQuote[];
@@ -40,12 +63,29 @@ export type LiveFile = {
 
 export const LIVE = liveFile as LiveFile;
 
-/** Official Netflix Tudum week of 7–13 September 2026. Not FlixPatrol points. */
+/** Official Netflix Tudum opening week, 7–13 September 2026. Not FlixPatrol points. */
 export const FAUDA_WEEK = {
   viewsM: "2.1",
   hoursM: "15.9",
   nonEnglishTv: 4,
   runtime: "7:27",
+  from: "2026-09-07",
+  to: "2026-09-13",
+  weeksInTop10: 2,
+  source: "https://www.netflix.com/tudum/top10/tv-non-english",
+} as const;
+
+/** Official Netflix Tudum week of 14–20 September 2026. Not FlixPatrol points. */
+export const FAUDA_WEEK_LATEST = {
+  viewsM: "1.6",
+  hoursM: "11.6",
+  nonEnglishTv: 9,
+  runtime: "7:27",
+  from: "2026-09-14",
+  to: "2026-09-20",
+  weeksInTop10: 2,
+  top10Countries: 42,
+  firstPlaces: 2,
   source: "https://www.netflix.com/tudum/top10/tv-non-english",
 } as const;
 

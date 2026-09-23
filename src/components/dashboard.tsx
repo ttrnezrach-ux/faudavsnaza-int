@@ -55,7 +55,7 @@ import {
 } from "@/lib/data";
 import { isoOf, formatIsoLine } from "@/lib/iso";
 import { SOURCE_HREF } from "@/lib/seo";
-import { FAUDA_WEEK } from "@/lib/live";
+import { FAUDA_WEEK, FAUDA_WEEK_LATEST } from "@/lib/live";
 import { cn } from "@/lib/utils";
 
 const TONE_BADGE: Record<Tone, "positive" | "mixed" | "critical"> = {
@@ -489,13 +489,30 @@ export function Dashboard() {
       <>
       <ArticleLede />
       {workView === "fauda" ? (
-        <section className="mx-auto grid w-full max-w-7xl grid-cols-2 gap-3 px-4 pb-4 sm:px-6" aria-label={t("week1Views")}>
-          <Kpi label={t("week1Views")} value={`${FAUDA_WEEK.viewsM}M`} hint={t("week1Dates")} />
-          <Kpi
-            label={t("week1Hours")}
-            value={`${FAUDA_WEEK.hoursM}M`}
-            hint={t("week1Rank", { n: FAUDA_WEEK.nonEnglishTv })}
-          />
+        <section className="mx-auto w-full max-w-7xl px-4 pb-4 sm:px-6" aria-label={t("netflixWeeksLabel")}>
+          <p className="mb-2 text-xs font-medium tracking-[0.14em] text-muted-foreground">{t("netflixWeeksLabel")}</p>
+          <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            <Kpi
+              label={t("week2Views")}
+              value={`${FAUDA_WEEK_LATEST.viewsM}M`}
+              hint={`${t("week2Dates")} · ${t("week2Rank", { n: FAUDA_WEEK_LATEST.nonEnglishTv })}`}
+            />
+            <Kpi
+              label={t("week2Hours")}
+              value={`${FAUDA_WEEK_LATEST.hoursM}M`}
+              hint={t("week2Countries", { n: FAUDA_WEEK_LATEST.top10Countries })}
+            />
+            <Kpi
+              label={t("week1Views")}
+              value={`${FAUDA_WEEK.viewsM}M`}
+              hint={`${t("week1Dates")} · ${t("week1Rank", { n: FAUDA_WEEK.nonEnglishTv })}`}
+            />
+            <Kpi
+              label={t("week1Hours")}
+              value={`${FAUDA_WEEK.hoursM}M`}
+              hint={t("week1Runtime", { runtime: FAUDA_WEEK.runtime })}
+            />
+          </div>
         </section>
       ) : null}
       <div className="mx-auto grid min-h-0 w-full max-w-7xl flex-1 grid-cols-1 gap-4 px-4 pt-1 pb-4 sm:px-6 lg:grid-cols-[minmax(0,1.4fr)_minmax(320px,0.9fr)]">
@@ -889,7 +906,7 @@ export function Dashboard() {
             {t("coverageLine", { n: countries.length, top: GLOBAL.top10Countries, talk: talkCount })}
             {" · "}
             {t(work.presence === "discourse" ? "nazaLiveUpdated" : "liveUpdated")}
-            {workView === "fauda" ? ` · ${t("week1Note")}` : ""}
+            {workView === "fauda" ? ` · ${t("netflixSourceNote")}` : ""}
           </p>
           {workView === "fauda" ? <PointsGraph /> : null}
           {workView === "naza" ? (

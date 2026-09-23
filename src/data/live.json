@@ -1,5 +1,5 @@
 {
-  "fetchedAt": "2026-09-20T19:32:00+03:00",
+  "fetchedAt": "2026-09-23T21:30:00+03:00",
   "source": "https://flixpatrol.com/title/fauda/",
   "snapshot": "9–20 בספטמבר 2026",
   "days": [
@@ -20,7 +20,8 @@
     "peakDate": "10 בספטמבר",
     "points": 62,
     "top10Countries": 28,
-    "firstPlaces": 2
+    "firstPlaces": 2,
+    "metric": "flixpatrol"
   },
   "ranks": {
     "AE": [
@@ -789,5 +790,111 @@
       8
     ],
     "source": "https://flixpatrol.com/title/fauda/"
+  },
+  "snapshotNote": "Netflix Tudum country ranks for the week ending 20.9 were entered manually from screenshots. Daily FlixPatrol ranks 9.9–18.9 were kept and were not overwritten. Days 19.9 and 20.9 were not appended to the daily rank series: Netflix country ranks are weekly, so copying them onto those days would mix a weekly Tudum chart into the FlixPatrol daily column. Global points, world rank, top10Countries and firstPlaces below stay FlixPatrol. Official Netflix reach is 42 countries and #1 in Israel and Lebanon, stored under netflix.",
+  "netflix": {
+    "source": "https://www.netflix.com/tudum/top10",
+    "note": "Week ending 20.9.2026 country ranks entered manually from Netflix Tudum screenshots. weekEnding2026_09_13 lists only countries given as a prior-week pair (a;b). A missing prior rank means the screenshot pair did not include it, not that the title left the chart. Not FlixPatrol points.",
+    "top10Countries": 42,
+    "firstPlaces": 2,
+    "firstPlaceCountries": [
+      "IL",
+      "LB"
+    ],
+    "views": {
+      "opening": {
+        "from": "2026-09-07",
+        "to": "2026-09-13",
+        "viewsM": "2.1",
+        "hoursM": "15.9",
+        "nonEnglishTv": 4,
+        "runtime": "7:27",
+        "weeksInTop10": 2
+      },
+      "latest": {
+        "from": "2026-09-14",
+        "to": "2026-09-20",
+        "viewsM": "1.6",
+        "hoursM": "11.6",
+        "nonEnglishTv": 9,
+        "runtime": "7:27",
+        "weeksInTop10": 2
+      }
+    },
+    "countryRanks": {
+      "weekEnding2026_09_20": {
+        "AE": 10,
+        "AR": 9,
+        "AT": 10,
+        "BD": 10,
+        "BE": 10,
+        "BG": 7,
+        "BH": 5,
+        "CH": 9,
+        "CY": 4,
+        "CZ": 8,
+        "DE": 10,
+        "DK": 10,
+        "ES": 10,
+        "FI": 10,
+        "FR": 9,
+        "GR": 7,
+        "HR": 8,
+        "HU": 9,
+        "IL": 1,
+        "IN": 9,
+        "IT": 10,
+        "JO": 9,
+        "KW": 9,
+        "LB": 1,
+        "LK": 10,
+        "LT": 9,
+        "LU": 10,
+        "MT": 10,
+        "NG": 10,
+        "NL": 6,
+        "NO": 9,
+        "OM": 7,
+        "PA": 9,
+        "PL": 10,
+        "PT": 10,
+        "QA": 4,
+        "RO": 7,
+        "RS": 8,
+        "SE": 8,
+        "SI": 10,
+        "SK": 5,
+        "UY": 10
+      },
+      "weekEnding2026_09_13": {
+        "AE": 5,
+        "AR": 8,
+        "BE": 6,
+        "BG": 5,
+        "CH": 6,
+        "CY": 2,
+        "CZ": 5,
+        "FI": 8,
+        "FR": 6,
+        "GR": 2,
+        "HR": 5,
+        "HU": 5,
+        "IL": 1,
+        "IN": 5,
+        "IT": 8,
+        "JO": 4,
+        "LB": 1,
+        "LK": 5,
+        "LU": 8,
+        "MT": 8,
+        "NL": 5,
+        "NO": 9,
+        "PL": 6,
+        "RO": 2,
+        "RS": 5,
+        "SE": 7,
+        "UY": 8
+      }
+    }
   }
 }
