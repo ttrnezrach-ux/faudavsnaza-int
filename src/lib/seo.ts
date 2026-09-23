@@ -129,7 +129,7 @@ export function hashtagLine(lang: Locale | string | undefined, work: SeoWork = "
   return hashtagsFor(lang, work).join(" ");
 }
 
-export const FACEBOOK_SHARE_URL = "https://faudaint.grok.me/";
+export const FACEBOOK_SHARE_URL = "https://faudavsnaza-int.vercel.app/";
 
 export function shareCaption(lang: Locale = "he"): string {
   const seo = seoFor(lang);
@@ -137,7 +137,7 @@ export function shareCaption(lang: Locale = "he"): string {
 }
 
 export function sharePageUrl(lang: Locale = "he"): string {
-  const origin = (publicOrigin() || "https://faudaint.grok.me").replace(/\/$/, "");
+  const origin = (publicOrigin() || "https://faudavsnaza-int.vercel.app").replace(/\/$/, "");
   const u = new URL(`${origin}/`);
   u.searchParams.set("lang", lang);
   u.searchParams.set("work", "compare");
@@ -146,7 +146,7 @@ export function sharePageUrl(lang: Locale = "he"): string {
 }
 
 export function shareImageUrl(lang: Locale = "he"): string {
-  const origin = (publicOrigin() || "https://faudaint.grok.me").replace(/\/$/, "");
+  const origin = (publicOrigin() || "https://faudavsnaza-int.vercel.app").replace(/\/$/, "");
   return `${origin}/og-${lang}.jpg`;
 }
 
@@ -184,11 +184,13 @@ export const OUTLET_LINKS = [
 ] as const;
 
 export function publicOrigin(): string {
-  const raw = String(
-    (typeof import.meta !== "undefined" && import.meta.env && import.meta.env.VITE_PUBLIC_HOSTNAME) ||
-      process.env.VITE_PUBLIC_HOSTNAME ||
-      "",
-  )
+  // Vite inlines `import.meta.env.VITE_*` at build time. Set
+  // VITE_PUBLIC_HOSTNAME on the Vercel production and preview environments
+  // before the build (hostname only, no scheme).
+  const fromBuild = import.meta.env.VITE_PUBLIC_HOSTNAME;
+  const fromRuntime =
+    typeof process !== "undefined" && process.env ? process.env.VITE_PUBLIC_HOSTNAME : undefined;
+  const raw = String(fromBuild || fromRuntime || "")
     .split(",")[0]
     .trim()
     .replace(/^https?:\/\//, "")
@@ -198,7 +200,7 @@ export function publicOrigin(): string {
 
 export function articleJsonLd(pageUrl: string, lang: Locale = "he", work: SeoWork = "compare") {
   const seo = seoFor(lang);
-  const origin = publicOrigin() || "https://faudaint.grok.me";
+  const origin = publicOrigin() || "https://faudavsnaza-int.vercel.app";
   const canonical = sharePageUrl(lang);
   const image = `${origin.replace(/\/$/, "")}/og-${lang}.jpg`;
   const tags = [...seo.tags, ...hashtagsFor(lang, work)];

@@ -16,7 +16,7 @@ export function isWorkViewParam(v: string | null | undefined): v is WorkView {
   return v === "fauda" || v === "naza" || v === "compare";
 }
 
-const LIVE = "https://faudaint.grok.me";
+const LIVE = "https://faudavsnaza-int.vercel.app";
 
 const WORK_HOOK: Record<Locale, Record<WorkView, string>> = {
   he: {
