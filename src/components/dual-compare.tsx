@@ -9,7 +9,7 @@ import { countryDisplayName, flagEmoji } from "@/lib/geo";
 import { cn } from "@/lib/utils";
 import { trackClick } from "@/lib/track";
 import { WorkStill } from "@/components/work-still";
-import { FAUDA_WEEK } from "@/lib/live";
+import { FAUDA_WEEK, FAUDA_WEEK_LATEST } from "@/lib/live";
 
 type SortKey = "invert" | "presence" | "name";
 
@@ -103,14 +103,20 @@ export function DualCompare({
           <p className="mt-2 text-sm leading-relaxed text-pretty text-muted-foreground">{t("workFaudaBlurb")}</p>
           <dl className="mt-4 grid grid-cols-2 gap-2 text-center sm:grid-cols-4">
             <div className="rounded-xl bg-muted px-2 py-2">
-              <dt className="text-xs text-muted-foreground">{t("week1Views")}</dt>
-              <dd className="font-display text-lg tabular-nums">{FAUDA_WEEK.viewsM}M</dd>
-              <p className="mt-0.5 text-xs text-muted-foreground">{t("week1Dates")}</p>
+              <dt className="text-xs text-muted-foreground">{t("week2Views")}</dt>
+              <dd className="font-display text-lg tabular-nums">{FAUDA_WEEK_LATEST.viewsM}M</dd>
+              <p className="mt-0.5 text-xs text-muted-foreground">{t("week2Rank", { n: FAUDA_WEEK_LATEST.nonEnglishTv })}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {t("week1Short")} {FAUDA_WEEK.viewsM}M · {t("week1Rank", { n: FAUDA_WEEK.nonEnglishTv })}
+              </p>
             </div>
             <div className="rounded-xl bg-muted px-2 py-2">
-              <dt className="text-xs text-muted-foreground">{t("week1Hours")}</dt>
-              <dd className="font-display text-lg tabular-nums">{FAUDA_WEEK.hoursM}M</dd>
-              <p className="mt-0.5 text-xs text-muted-foreground">{t("week1Rank", { n: FAUDA_WEEK.nonEnglishTv })}</p>
+              <dt className="text-xs text-muted-foreground">{t("week2Hours")}</dt>
+              <dd className="font-display text-lg tabular-nums">{FAUDA_WEEK_LATEST.hoursM}M</dd>
+              <p className="mt-0.5 text-xs text-muted-foreground">{t("week2Dates")}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                {t("week1Short")} {FAUDA_WEEK.hoursM}M
+              </p>
             </div>
             <div className="rounded-xl bg-muted px-2 py-2">
               <dt className="text-[11px] text-muted-foreground">{t("kpiWorld")}</dt>

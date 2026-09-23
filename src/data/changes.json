@@ -1,86 +1,13 @@
 {
-  "lastRunAt": "2026-09-23T21:00:00+03:00",
+  "lastRunAt": "2026-09-23T21:30:00+03:00",
   "slot": "evening",
   "significant": true,
-  "noteHe": "גרסה 4.3 · עודכן 21:00 שעון ישראל. שיח X 21–23 בספטמבר לפאודה ולנז״א. דירוגי FlixPatrol עדיין עד 20.9 — ממתינים לצילום.",
-  "noteEn": "Version 4.3 · updated 21:00 Israel time. X discourse 21–23 September for Fauda and NAZA. FlixPatrol ranks still through 20.9, pending a screenshot.",
+  "noteHe": "גרסה 4.4 · עודכן 21:30 שעון ישראל. נטפליקס 14–20.9: #9, 1.6M צפיות, 11.6M שעות, 42 מדינות, #1 בישראל ובלבנון. שבוע הפתיחה 2.1M / 15.9M נשאר על המסך. FlixPatrol היומי ללא שינוי עד 18.9.",
+  "noteEn": "Version 4.4 · updated 21:30 Israel time. Netflix 14–20 Sep: #9, 1.6M views, 11.6M hours, 42 countries, #1 in Israel and Lebanon. Opening week 2.1M / 15.9M stays on screen. FlixPatrol daily ranks unchanged through 18 Sep.",
   "wikiAt": "2026-09-15T09:58:47Z",
-  "deltas": [
-    {
-      "id": "AE",
-      "from": 4,
-      "to": 7,
-      "kind": "jump"
-    },
-    {
-      "id": "BD",
-      "from": 9,
-      "to": null,
-      "kind": "leave"
-    },
-    {
-      "id": "BE",
-      "from": 4,
-      "to": 7,
-      "kind": "jump"
-    },
-    {
-      "id": "BH",
-      "from": 5,
-      "to": 9,
-      "kind": "jump"
-    },
-    {
-      "id": "IN",
-      "from": 4,
-      "to": 8,
-      "kind": "jump"
-    },
-    {
-      "id": "JO",
-      "from": 3,
-      "to": 6,
-      "kind": "jump"
-    },
-    {
-      "id": "KW",
-      "from": 10,
-      "to": null,
-      "kind": "leave"
-    },
-    {
-      "id": "LK",
-      "from": 4,
-      "to": 6,
-      "kind": "jump"
-    },
-    {
-      "id": "MA",
-      "from": 5,
-      "to": 8,
-      "kind": "jump"
-    },
-    {
-      "id": "QA",
-      "from": 5,
-      "to": 8,
-      "kind": "jump"
-    },
-    {
-      "id": "SI",
-      "from": 6,
-      "to": 9,
-      "kind": "jump"
-    },
-    {
-      "id": "VE",
-      "from": null,
-      "to": 10,
-      "kind": "enter"
-    }
-  ],
+  "deltas": [],
   "timezone": "Asia/Jerusalem",
   "morning": "08:00",
   "evening": "21:00",
-  "version": 43
+  "version": 44
 }
