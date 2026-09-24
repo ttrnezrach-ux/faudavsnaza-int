@@ -81,7 +81,7 @@ export function appNameFromHost(hostHeader) {
   );
 }
 
-/** True for Vercel system domains. Envoy rewrites origin Host to these; they SSO-protect `/og.jpg`. */
+/** True for Vercel system domains. Envoy rewrites origin Host to these; they can SSO-protect `/og.jpg`. */
 function isVercelSystemHost(host) {
   return (
     host === "vercel.app" ||
@@ -91,8 +91,7 @@ function isVercelSystemHost(host) {
   );
 }
 
-/** Hostname suitable for absolute og:image URLs. Preview guests (X-Forwarded-Host) are allowed. */
-export function publicAppHost(hostHeader) {
+function normalizeHost(hostHeader) {
   const host = String(hostHeader ?? "")
     .split(",")[0]
     .trim()
@@ -100,20 +99,39 @@ export function publicAppHost(hostHeader) {
     .toLowerCase();
   if (!host || !/^[a-z0-9.-]+$/.test(host) || !host.includes(".")) return "";
   if (/^\d{1,3}(?:\.\d{1,3}){3}$/.test(host)) return "";
-  if (isVercelSystemHost(host)) return "";
+  return host;
+}
+
+/** Hostname suitable for absolute og:image URLs. Preview guests (X-Forwarded-Host) are allowed. */
+export function publicAppHost(hostHeader) {
+  const host = normalizeHost(hostHeader);
+  if (!host || isVercelSystemHost(host)) return "";
   return host;
 }
 
 /**
- * Published apps always use `VITE_PUBLIC_HOSTNAME` (the grok.me host the
- * deployer injects). Live preview has no such env, so fall back to the
- * request host / X-Forwarded-Host. Never prefer request Host on a published
- * app — Envoy rewrites it to `*.vercel.app`.
+ * Hostname from an explicit publish setting (`VITE_PUBLIC_HOSTNAME`).
+ * A production alias on `*.vercel.app` is trusted — the deployer chose it and
+ * the card is served from that host. Apex `vercel.app` / `vercel.com` are not
+ * an app origin. Scheme and path are stripped so `https://app.vercel.app/` works.
+ */
+export function publishedAppHost(hostHeader) {
+  let raw = String(hostHeader ?? "").split(",")[0].trim();
+  raw = raw.replace(/^https?:\/\//i, "").split("/")[0] ?? "";
+  const host = normalizeHost(raw);
+  if (!host) return "";
+  if (host === "vercel.app" || host === "vercel.com") return "";
+  return host;
+}
+
+/**
+ * Published apps always use `VITE_PUBLIC_HOSTNAME`, including a `*.vercel.app`
+ * production alias. Live preview has no such env, so fall back to the request
+ * host / X-Forwarded-Host. A bare request Host that is only a Vercel system
+ * domain is still rejected — Envoy rewrites origin Host to those.
  */
 export function resolvePublicHost(hostHeader) {
-  return (
-    publicAppHost(process.env?.VITE_PUBLIC_HOSTNAME) || publicAppHost(hostHeader)
-  );
+  return publishedAppHost(process.env?.VITE_PUBLIC_HOSTNAME) || publicAppHost(hostHeader);
 }
 
 export function isInstallQuery(url) {
@@ -317,13 +335,87 @@ export function siteHasCustomCard(site = {}) {
   return String(site.card ?? "").toLowerCase() === "custom";
 }
 
+function queryStringFrom(url) {
+  const raw = String(url ?? "").trim();
+  if (!raw) return "";
+  const hashless = raw.split("#")[0] ?? "";
+  const q = hashless.indexOf("?");
+  if (q >= 0) return hashless.slice(q + 1);
+  if (hashless.startsWith("/") || /^https?:\/\//i.test(hashless)) return "";
+  return hashless;
+}
+
+/** Per-request card paths. These beat the generic on-disk `/og.jpg`. */
+function isRequestCardPath(path) {
+  return /^\/og-[a-z]{2}\.jpg$/.test(path) || /^\/works\/[a-z0-9-]+\.jpg$/.test(path);
+}
+
+function localizedCardPath(lang, work) {
+  if (work === "naza") return "/works/naza.jpg";
+  if (work === "fauda") return "/works/fauda.jpg";
+  if (/^[a-z]{2}$/.test(lang)) return `/og-${lang}.jpg`;
+  return "";
+}
+
+/**
+ * Apply `?lang=` / `?work=` from the request to a custom card.
+ * `work=naza|fauda` picks the work still; otherwise `lang` picks `/og-{lang}.jpg`.
+ */
+export function localizeOgSite(site = {}, search = "") {
+  const params = new URLSearchParams(queryStringFrom(search));
+  const lang = String(params.get("lang") ?? "").trim().toLowerCase();
+  const work = String(params.get("work") ?? "").trim().toLowerCase();
+  const next = { ...site };
+  const locales = site.locales;
+  const pack = locales && typeof locales === "object" ? locales[lang] : undefined;
+  if (pack && typeof pack === "object") {
+    const title = String(pack.title ?? "").trim();
+    const description = String(pack.description ?? "").trim();
+    if (title) next.title = title;
+    if (description) next.description = description;
+  }
+  if (siteHasCustomCard(site) || String(site.image ?? "").trim()) {
+    const image = localizedCardPath(lang, work);
+    if (image) next.image = image;
+  }
+  return next;
+}
+
+function absolutePageUrl(publicHost, url) {
+  if (!publicHost) return "";
+  let raw = String(url ?? "").trim();
+  if (/^https?:\/\//i.test(raw)) {
+    try {
+      const parsed = new URL(raw);
+      return `https://${publicHost}${parsed.pathname || "/"}${parsed.search}`;
+    } catch {
+      raw = "/";
+    }
+  }
+  if (!raw || raw === "/") return `https://${publicHost}/`;
+  if (raw.startsWith("?")) return `https://${publicHost}/${raw}`;
+  if (raw.startsWith("/")) return `https://${publicHost}${raw}`;
+  return `https://${publicHost}/?${raw.replace(/^\?/, "")}`;
+}
+
+function ogTypeTag(site = {}) {
+  const type = String(site.type ?? "").trim();
+  if (!/^[A-Za-z][A-Za-z0-9:._-]{0,40}$/.test(type)) return "";
+  return `<meta property="og:type" content="${escapeHtml(type)}">`;
+}
+
 /**
  * Preview: public/og.jpg|png on disk.
  * Vercel: the bake (`card=custom` / `image`) because the function cannot stat public/.
  * Otherwise empty — caller emits the og.grok.me placeholder.
  */
 export function resolveOgCardAsset(site = {}, cwd = process.cwd()) {
-  return ogCardPublicPath(cwd) || (detectCustomOgCard(cwd, site) ? String(site.image ?? "").trim() || "/og.jpg" : "");
+  const disk = ogCardPublicPath(cwd);
+  const fromSite = String(site.image ?? "").trim();
+  // A share-query card (`/og-en.jpg`, `/works/naza.jpg`) is the page's image.
+  // The generic `public/og.jpg` still wins over any other baked path.
+  if (fromSite && isRequestCardPath(fromSite) && fromSite !== disk) return fromSite;
+  return disk || (detectCustomOgCard(cwd, site) ? fromSite || "/og.jpg" : "");
 }
 
 /** Stamp `card=custom` when public/og.jpg or public/og.png is on disk. */
@@ -339,19 +431,26 @@ export function grokOgHeadTags({
   site = {},
   documentTitle = "",
   cwd = process.cwd(),
+  url = "",
 } = {}) {
   const title = resolveOgTitle(site, appName, host, documentTitle);
   const publicHost = resolvePublicHost(host);
+  const description = String(site.description ?? "").trim();
   const tags = [
     `<meta name="twitter:card" content="summary_large_image">`,
+    `<meta name="twitter:title" content="${escapeHtml(title)}">`,
     `<meta property="og:title" content="${escapeHtml(title)}">`,
+    `<meta property="og:site_name" content="${escapeHtml(title)}">`,
   ];
-  const description = String(site.description ?? "").trim();
   if (description) {
     tags.push(`<meta property="og:description" content="${escapeHtml(description)}">`);
+    tags.push(`<meta name="twitter:description" content="${escapeHtml(description)}">`);
   }
-  if (String(site.type ?? "").toLowerCase() === "x:game") {
-    tags.push(`<meta property="og:type" content="x:game">`);
+  const typeTag = ogTypeTag(site);
+  if (typeTag) tags.push(typeTag);
+  const pageUrl = absolutePageUrl(publicHost, url);
+  if (pageUrl) {
+    tags.push(`<meta property="og:url" content="${escapeHtml(pageUrl)}">`);
   }
   if (publicHost) {
     const asset = resolveOgCardAsset(site, cwd);
@@ -361,9 +460,11 @@ export function grokOgHeadTags({
       : `${ogServiceUrl()}/v1/card.png?host=${encodeURIComponent(publicHost)}&title=${encodeURIComponent(title)}`;
     const color = !custom ? placeholderCardColor(site) : "";
     if (color) image += `&color=${encodeURIComponent(color)}`;
-    tags.push(`<meta property="og:image" content="${escapeHtml(image)}">`);
+    const imageTag = escapeHtml(image);
+    tags.push(`<meta property="og:image" content="${imageTag}">`);
     tags.push(`<meta property="og:image:width" content="1200">`);
     tags.push(`<meta property="og:image:height" content="630">`);
+    tags.push(`<meta name="twitter:image" content="${imageTag}">`);
     const banner = String(site.banner ?? "").trim();
     if (banner) {
       const bannerUrl = `https://${publicHost}${banner.startsWith("/") ? banner : `/${banner}`}`;
@@ -406,9 +507,13 @@ export function normalizeHeadContext(ctx = {}) {
   // public/og.jpg generated after that snapshot (or missed by a wrong cwd)
   // wins over the og.grok.me placeholder. Vercel has no public/ to read, so
   // a correct bake is unchanged.
-  const site = applyCustomCardFromFs(
-    ctx.site !== undefined ? ctx.site : snapshotOgIdentity(cwd).site,
-    cwd,
+  const url = String(ctx.url ?? ctx.search ?? "");
+  const site = localizeOgSite(
+    applyCustomCardFromFs(
+      ctx.site !== undefined ? ctx.site : snapshotOgIdentity(cwd).site,
+      cwd,
+    ),
+    url,
   );
   const appName = resolveOgTitle(site, ctx.appName ?? DEFAULT_APP_NAME, ctx.host ?? "");
   return {
@@ -419,12 +524,13 @@ export function normalizeHeadContext(ctx = {}) {
     host: ctx.host ?? "",
     cwd,
     site,
+    url,
   };
 }
 
 export function injectGrokPwaHead(html, ctx = {}) {
   if (typeof html !== "string") return html;
-  const { site, projectId, creator, creatorId, host, cwd } = normalizeHeadContext(ctx);
+  const { site, projectId, creator, creatorId, host, cwd, url } = normalizeHeadContext(ctx);
   const documentTitle = titleFromDocument(html);
   const appName = resolveOgTitle(
     site,
@@ -444,7 +550,7 @@ export function injectGrokPwaHead(html, ctx = {}) {
 
   next = insertAfterHeadOpen(
     next,
-    grokOgHeadTags({ host, appName, site, documentTitle, cwd }).join(""),
+    grokOgHeadTags({ host, appName, site, documentTitle, cwd, url }).join(""),
   );
 
   if (!next.includes("/grok-app-builder/extensions.js")) {
@@ -498,6 +604,7 @@ export function createHeadInjector(ctx = {}) {
       host: normalized.host,
       cwd: normalized.cwd,
       site: normalized.site,
+      url: normalized.url,
     });
 
   return {
