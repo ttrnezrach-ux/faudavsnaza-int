@@ -13,6 +13,7 @@ import {
   isInstallQuery,
   localizeOgSite,
   publicAppHost,
+  publishedAppHost,
   renderWebManifest,
   resolveOgCardAsset,
   snapshotOgIdentity,
@@ -255,8 +256,18 @@ test("published grok.me slug is still a title fallback", () => {
 test("rejects Vercel system hosts as og:image origins", () => {
   assert.equal(publicAppHost("01a020b6-803a-71a2-bb47-e2bec57eb9a2-662k8x1l1-xai-org.vercel.app"), "");
   assert.equal(publicAppHost("demo.vercel.app:443"), "");
+  assert.equal(publicAppHost("faudavsnaza-int.vercel.app"), "");
   assert.equal(publicAppHost("vercel.app"), "");
   assert.equal(publicAppHost("wild-race.grok.me"), "wild-race.grok.me");
+});
+
+test("published hostname trusts an explicit *.vercel.app alias", () => {
+  assert.equal(publishedAppHost("faudavsnaza-int.vercel.app"), "faudavsnaza-int.vercel.app");
+  assert.equal(publishedAppHost("https://FaudaVsnaza-Int.vercel.app/"), "faudavsnaza-int.vercel.app");
+  assert.equal(publishedAppHost("https://faudavsnaza-int.vercel.app:443/path"), "faudavsnaza-int.vercel.app");
+  assert.equal(publishedAppHost("vercel.app"), "");
+  assert.equal(publishedAppHost("vercel.com"), "");
+  assert.equal(publishedAppHost("plum-plaza-reef-dream.grok.me"), "plum-plaza-reef-dream.grok.me");
 });
 
 test("published VITE_PUBLIC_HOSTNAME wins over request Host for og:image", () => {
@@ -297,11 +308,109 @@ test("vercel Host without a public hostname emits no og:image", () => {
       site: { title: "RACK", card: "custom" },
     });
     assert.doesNotMatch(out, /property="og:image"/);
+    assert.doesNotMatch(out, /name="twitter:image"/);
     assert.doesNotMatch(out, /vercel\.app/);
+
+    const alias = injectGrokPwaHead("<html><head><title>RACK</title></head></html>", {
+      host: "faudavsnaza-int.vercel.app",
+      cwd: mkdtempSync(join(tmpdir(), "grok-og-vercel-alias-")),
+      site: { title: "RACK", description: "A map", card: "custom", image: "/share-collage.jpg" },
+    });
+    assert.doesNotMatch(alias, /property="og:image"/);
+    assert.doesNotMatch(alias, /name="twitter:image"/);
+    assert.doesNotMatch(alias, /vercel\.app/);
   } finally {
     if (prev === undefined) delete process.env.VITE_PUBLIC_HOSTNAME;
     else process.env.VITE_PUBLIC_HOSTNAME = prev;
   }
+});
+
+test("published VITE_PUBLIC_HOSTNAME on vercel.app is used for share tags", () => {
+  const prev = process.env.VITE_PUBLIC_HOSTNAME;
+  process.env.VITE_PUBLIC_HOSTNAME = "https://faudavsnaza-int.vercel.app/";
+  const empty = mkdtempSync(join(tmpdir(), "grok-og-published-vercel-"));
+  try {
+    const html =
+      '<html><head><title>Ignored</title>' +
+      '<meta property="og:image" content="https://evil.example/old.jpg">' +
+      '<meta name="twitter:title" content="OLD">' +
+      '<meta name="twitter:description" content="OLD DESC">' +
+      '<meta name="twitter:image" content="https://evil.example/old.jpg">' +
+      '<meta property="og:url" content="https://evil.example/">' +
+      '<meta property="og:site_name" content="OLD">' +
+      "</head></html>";
+    const out = injectGrokPwaHead(html, {
+      host: "faudavsnaza-int-git-main-tikra2.vercel.app",
+      cwd: empty,
+      url: "/",
+      site: {
+        title: "פאודה 5 מול נז״א",
+        description: "אותה מתודולוגיה",
+        card: "custom",
+        type: "article",
+        image: "/share-collage.jpg",
+      },
+    });
+    const image = "https://faudavsnaza-int.vercel.app/share-collage.jpg";
+    assert.match(out, new RegExp(`property="og:image" content="${image}"`));
+    assert.match(out, /property="og:image:width" content="1200"/);
+    assert.match(out, /property="og:image:height" content="630"/);
+    assert.match(out, /property="og:title" content="פאודה 5 מול נז״א"/);
+    assert.match(out, /property="og:description" content="אותה מתודולוגיה"/);
+    assert.match(out, /property="og:url" content="https:\/\/faudavsnaza-int\.vercel\.app\/"/);
+    assert.match(out, /property="og:type" content="article"/);
+    assert.match(out, /property="og:site_name" content="פאודה 5 מול נז״א"/);
+    assert.match(out, /name="twitter:card" content="summary_large_image"/);
+    assert.match(out, /name="twitter:title" content="פאודה 5 מול נז״א"/);
+    assert.match(out, /name="twitter:description" content="אותה מתודולוגיה"/);
+    assert.match(out, new RegExp(`name="twitter:image" content="${image}"`));
+    assert.doesNotMatch(out, /evil\.example/);
+    assert.doesNotMatch(out, /content="OLD"/);
+    assert.doesNotMatch(out, /git-main-tikra2/);
+    assert.equal(out.split('property="og:image"').length - 1, 1);
+    assert.equal(out.split('name="twitter:image"').length - 1, 1);
+    assert.equal(out.split('name="twitter:title"').length - 1, 1);
+    assert.equal(out.split('name="twitter:description"').length - 1, 1);
+
+    const again = injectGrokPwaHead(out, {
+      host: "faudavsnaza-int-git-main-tikra2.vercel.app",
+      cwd: empty,
+      url: "/",
+      site: {
+        title: "פאודה 5 מול נז״א",
+        description: "אותה מתודולוגיה",
+        card: "custom",
+        type: "article",
+        image: "/share-collage.jpg",
+      },
+    });
+    assert.equal(again, out);
+  } finally {
+    if (prev === undefined) delete process.env.VITE_PUBLIC_HOSTNAME;
+    else process.env.VITE_PUBLIC_HOSTNAME = prev;
+  }
+});
+
+test("re-injects twitter title, description, and image on a public host", () => {
+  const empty = mkdtempSync(join(tmpdir(), "grok-og-twitter-"));
+  const html =
+    '<html><head><meta name="twitter:title" content="OLD"><meta name="twitter:description" content="OLD DESC"><meta name="twitter:image" content="https://evil.example/a.jpg"></head></html>';
+  const out = injectGrokPwaHead(html, {
+    host: "wild-race.grok.me",
+    cwd: empty,
+    site: { title: "Wild Race", description: "A race", card: "custom", image: "/og.jpg" },
+  });
+  assert.doesNotMatch(out, /OLD/);
+  assert.doesNotMatch(out, /evil\.example/);
+  assert.match(out, /name="twitter:title" content="Wild Race"/);
+  assert.match(out, /name="twitter:description" content="A race"/);
+  assert.match(out, /name="twitter:image" content="https:\/\/wild-race\.grok\.me\/og\.jpg"/);
+  assert.match(out, /property="og:image" content="https:\/\/wild-race\.grok\.me\/og\.jpg"/);
+  assert.match(out, /property="og:url" content="https:\/\/wild-race\.grok\.me\/"/);
+  assert.match(out, /property="og:site_name" content="Wild Race"/);
+  assert.equal(out.split('name="twitter:title"').length - 1, 1);
+  assert.equal(out.split('name="twitter:description"').length - 1, 1);
+  assert.equal(out.split('name="twitter:image"').length - 1, 1);
 });
 
 test("emits og:image for a public host and prefers a custom card", () => {

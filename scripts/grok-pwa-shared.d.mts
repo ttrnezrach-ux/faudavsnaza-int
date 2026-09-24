@@ -4,6 +4,7 @@ export declare const OG_SITE_REL_PATH: string;
 export declare function escapeHtml(value: unknown): string;
 export declare function appNameFromHost(hostHeader: string | null | undefined): string;
 export declare function publicAppHost(hostHeader: string | null | undefined): string;
+export declare function publishedAppHost(hostHeader: string | null | undefined): string;
 export declare function resolvePublicHost(hostHeader: string | null | undefined): string;
 export declare function isInstallQuery(url: string | null | undefined): boolean;
 export declare function isDocumentPath(pathname: string | null | undefined): boolean;
@@ -30,6 +31,7 @@ export type OgSite = {
   image?: string;
   banner?: string;
   color?: string;
+  locales?: Record<string, { title?: string; description?: string; image?: string }>;
 };
 
 export type GrokHeadContext = {
@@ -40,6 +42,9 @@ export type GrokHeadContext = {
   host?: string | null;
   cwd?: string;
   site?: OgSite;
+  /** Request path + query (`/?lang=en`) or a bare query (`?lang=en`). */
+  url?: string | null;
+  search?: string | null;
 };
 
 export declare function readOgSite(cwd?: string): OgSite;
@@ -56,12 +61,14 @@ export declare function resolveOgTitle(
   documentTitle?: string,
 ): string;
 export declare function siteHasCustomCard(site?: OgSite): boolean;
+export declare function localizeOgSite(site?: OgSite, search?: string | null): OgSite;
 export declare function grokOgHeadTags(ctx?: {
   host?: string;
   appName?: string;
   site?: OgSite;
   documentTitle?: string;
   cwd?: string;
+  url?: string;
 }): string[];
 export declare function stripShareMetaTags(html: string): string;
 export declare function normalizeHeadContext(ctx?: GrokHeadContext): {
@@ -72,6 +79,7 @@ export declare function normalizeHeadContext(ctx?: GrokHeadContext): {
   host: string;
   cwd: string;
   site: OgSite;
+  url: string;
 };
 export declare function injectGrokPwaHead(html: string, ctx?: GrokHeadContext): string;
 export declare function createHeadInjector(ctx?: GrokHeadContext): {
