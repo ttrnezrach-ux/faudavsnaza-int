@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { countryDisplayName, flagEmoji, googleHostCountry } from "@/lib/geo";
-import type { CountryStat, DualHour, GoalStat, GoogleArrival, IpTraffic, RecentClick } from "@/lib/visits";
-import { useI18n } from "@/lib/i18n";
+import type { CountryStat, DualHour, GoalStat, GoogleArrival, IpTraffic, NamedCount, RecentClick } from "@/lib/visits";
+import { LOCALE_META, useI18n } from "@/lib/i18n";
 
 const SLICE = ["#d8d2c8", "#7d9b84", "#c4a574", "#c47a7a", "#8aa0b8", "#b89a7a", "#9a8ab8", "#7aa8a0"] as const;
 
@@ -323,10 +323,12 @@ function IpVisitChart({ rows }: { rows: IpTraffic[] }) {
   );
 }
 
-function ClickDonut({
+export function ClickDonut({
   slices,
+  centerLabel,
 }: {
   slices: { id: string; label: string; count: number }[];
+  centerLabel?: string;
 }) {
   const { t, locale } = useI18n();
   const data = slices.slice(0, 8).filter((s) => s.count > 0);
@@ -367,7 +369,7 @@ function ClickDonut({
           {total.toLocaleString(locale)}
         </text>
         <text x="80" y="96" textAnchor="middle" className="fill-muted-foreground" fontSize="11">
-          {t("trafficClicks")}
+          {centerLabel ?? t("trafficClicks")}
         </text>
       </svg>
       <ul className="grid min-w-0 flex-1 grid-cols-1 gap-2">
@@ -604,6 +606,120 @@ export function GoogleArrivalCharts({ data }: { data: GoogleArrival }) {
           </div>
         </section>
       ) : null}
+    </section>
+  );
+}
+
+export function FunnelLadder({ steps }: { steps: { key: string; n: number }[] }) {
+  const { t, locale } = useI18n();
+  const land = steps[0]?.n ?? 0;
+  if (!land) return <p className="mt-3 text-sm text-muted-foreground">{t("noData")}</p>;
+
+  return (
+    <ol className="mt-3 space-y-2">
+      {steps.map((step, i) => {
+        const prev = i === 0 ? step.n : steps[i - 1]?.n ?? 0;
+        const ofLand = Math.round((step.n / land) * 100);
+        const fromPrev = prev ? Math.round((step.n / prev) * 100) : 0;
+        const width = Math.min(100, Math.max(step.n ? 8 : 0, ofLand));
+        return (
+          <li key={step.key}>
+            {i > 0 ? (
+              <p className="mb-1 text-center text-xs font-medium text-muted-foreground">
+                {t("funnelStepRate", { n: fromPrev })}
+              </p>
+            ) : null}
+            <div className="flex items-center justify-between gap-3 text-sm">
+              <span className="font-medium">{t(step.key)}</span>
+              <span className="tabular-nums text-muted-foreground">
+                {step.n.toLocaleString(locale)} · {t("funnelOfLand", { n: ofLand })}
+              </span>
+            </div>
+            <div className="mt-1 h-3 overflow-hidden rounded-full bg-muted">
+              <span className="block h-full rounded-full bg-heat" style={{ width: `${width}%` }} />
+            </div>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+function workSliceLabel(name: string, t: (k: string) => string) {
+  if (name === "fauda") return t("workFaudaShort");
+  if (name === "naza") return t("workNazaShort");
+  if (name === "compare") return t("workCompare");
+  return t("dimUnknown");
+}
+
+function tabSliceLabel(name: string, t: (k: string) => string) {
+  if (name === "map") return t("navMap");
+  if (name === "social") return t("navSocialShort");
+  if (name === "algo") return t("navAlgo");
+  if (name === "concl") return t("navConcl");
+  return t("dimUnknown");
+}
+
+function langSliceLabel(name: string, t: (k: string) => string) {
+  if (name === "unknown") return t("dimUnknown");
+  return LOCALE_META[name as keyof typeof LOCALE_META]?.native ?? name.toUpperCase();
+}
+
+function knownSlices(rows: NamedCount[], label: (name: string, t: (k: string) => string) => string, t: (k: string) => string) {
+  return rows
+    .filter((r) => r.name !== "unknown" && r.count > 0)
+    .map((r) => ({ id: r.name, label: label(r.name, t), count: r.count }));
+}
+
+export function DimensionCharts({
+  works,
+  tabs,
+  langs,
+}: {
+  works: NamedCount[];
+  tabs: NamedCount[];
+  langs: NamedCount[];
+}) {
+  const { t, locale } = useI18n();
+  const pending = (rows: NamedCount[]) => rows.find((r) => r.name === "unknown")?.count ?? 0;
+  const cards = [
+    { title: t("workBreakdown"), hint: t("workBreakdownHint"), rows: works, label: workSliceLabel },
+    { title: t("tabBreakdown"), hint: t("tabBreakdownHint"), rows: tabs, label: tabSliceLabel },
+    { title: t("langBreakdown"), hint: t("langBreakdownHint"), rows: langs, label: langSliceLabel },
+  ] as const;
+
+  return (
+    <section className="space-y-4" aria-labelledby="dims-heading">
+      <div>
+        <h2 id="dims-heading" className="font-display text-xl font-medium">
+          {t("breakdownTitle")}
+        </h2>
+        <p className="mt-1 text-sm text-muted-foreground">{t("breakdownHint")}</p>
+      </div>
+      <div className="grid gap-4 lg:grid-cols-3">
+        {cards.map((card) => {
+          const older = pending(card.rows);
+          const slices = knownSlices(card.rows, card.label, t);
+          return (
+            <section key={card.title} className="rounded-2xl bg-card p-4 shadow-[var(--shadow-border)] sm:p-5">
+              <h3 className="font-display text-lg font-medium">{card.title}</h3>
+              <p className="mt-1 text-sm text-muted-foreground">{card.hint}</p>
+              <div className="mt-3">
+                {slices.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    {older > 0 ? t("dimPending", { n: older.toLocaleString(locale) }) : t("noData")}
+                  </p>
+                ) : (
+                  <ClickDonut slices={slices} centerLabel={t("trafficVisits")} />
+                )}
+              </div>
+              {slices.length > 0 && older > 0 ? (
+                <p className="mt-2 text-xs text-muted-foreground">{t("dimPending", { n: older.toLocaleString(locale) })}</p>
+              ) : null}
+            </section>
+          );
+        })}
+      </div>
     </section>
   );
 }

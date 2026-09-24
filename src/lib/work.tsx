@@ -23,6 +23,7 @@ import {
 import { NAZA_DAYS, NAZA_GLOBAL, NAZA_QUOTES, NAZA_SNAPSHOT, nazaCountries } from "@/lib/naza";
 import { LIVE, type LiveFile } from "@/lib/live";
 import { getLatestLiveRun, runLiveIngest, type LiveRun } from "@/lib/ingest";
+import { patchSearch } from "@/lib/view-url";
 
 export type WorkId = "fauda" | "naza";
 export type WorkView = WorkId | "compare";
@@ -79,7 +80,7 @@ export const WORKS: Record<WorkId, WorkBundle> = {
 
 type WorkValue = {
   view: WorkView;
-  setView: (view: WorkView) => void;
+  setView: (view: WorkView, options?: { patch?: boolean }) => void;
   work: WorkBundle;
   other: WorkBundle;
   fauda: WorkBundle;
@@ -141,11 +142,10 @@ export function WorkProvider({ children, initialView }: { children: ReactNode; i
       });
   }, []);
 
-  const setView = useCallback((next: WorkView) => {
+  const setView = useCallback((next: WorkView, options?: { patch?: boolean }) => {
     setViewState(next);
-    const url = new URL(window.location.href);
-    url.searchParams.set("work", next);
-    window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+    if (options?.patch === false) return;
+    patchSearch((params) => params.set("work", next));
   }, []);
 
   const fauda = useMemo(() => patchFauda(overlay), [overlay]);

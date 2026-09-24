@@ -1,6 +1,5 @@
-import { DualHourChart } from "@/components/traffic-chart";
 import { countryDisplayName, flagEmoji } from "@/lib/geo";
-import type { DualHour, NamedCount, OfficeStats } from "@/lib/visits";
+import type { NamedCount, OfficeStats } from "@/lib/visits";
 import { useI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 
@@ -169,11 +168,9 @@ function CommonCard({
 
 export function OfficeOverview({
   stats,
-  hourlyTitle,
   labelClick,
 }: {
   stats: OfficeStats;
-  hourlyTitle: string;
   labelClick: (target: string) => string;
 }) {
   const { t, locale } = useI18n();
@@ -193,12 +190,6 @@ export function OfficeOverview({
 
   return (
     <div className="space-y-4">
-      <section className="rounded-2xl bg-card p-4 shadow-[var(--shadow-border)] sm:p-5">
-        <h2 className="font-display text-lg font-medium">{hourlyTitle}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">{t("trafficHint")}</p>
-        <DualHourChart points={stats.hourlyDual as DualHour[]} />
-      </section>
-
       <div>
         <h2 className="font-display text-lg font-medium">{t("mostCommon")}</h2>
         <p className="mt-1 text-sm text-muted-foreground">{t("mostCommonHint")}</p>

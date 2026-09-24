@@ -235,7 +235,7 @@ function MoodPanel({ platform }: { platform: SocialPlatform | "all" }) {
 
 function MoodRow({ comment }: { comment: MoodComment }) {
   const { t, locale } = useI18n();
-  const { work } = useWork();
+  const { work, view } = useWork();
   const [on, setOn] = useState(false);
   useEffect(() => setOn(false), [locale]);
   const variant = comment.bucket === "support" ? "positive" : comment.bucket === "critical" ? "critical" : "mixed";
@@ -247,7 +247,7 @@ function MoodRow({ comment }: { comment: MoodComment }) {
         href={comment.url}
         target="_blank"
         rel="noopener noreferrer"
-        onClick={() => trackClick(`comment:${comment.platform}`)}
+        onClick={() => trackClick(`comment:${view}:${comment.platform}`)}
         className="block rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
         <p className="flex flex-wrap items-center gap-1.5 text-[11px] text-muted-foreground">
@@ -336,7 +336,7 @@ function PostCard({ post, locale }: { post: SocialPost; locale: string }) {
         href={post.url}
         target="_blank"
         rel="noopener noreferrer"
-        onClick={() => trackClick(`social:${post.platform}`)}
+        onClick={() => trackClick(`social:${post.work ?? (view === "naza" ? "naza" : "fauda")}:${post.platform}`)}
         className="mt-2 inline-flex min-h-11 items-center gap-1.5 text-xs font-medium text-foreground underline-offset-4 hover:underline"
       >
         <ExternalLink className="size-3.5 shrink-0" aria-hidden="true" />
@@ -453,7 +453,7 @@ export function SocialFeed() {
           country={country}
           onPlatform={(p) => {
             setPlatform(p);
-            trackClick(`viz:platform:${p}`);
+            trackClick(`social-tab:${workView}:${p}`);
           }}
           onCountry={(id) => {
             setCountry(id);
@@ -466,7 +466,10 @@ export function SocialFeed() {
               key={opt}
               type="button"
               aria-pressed={platform === opt}
-              onClick={() => setPlatform(opt)}
+              onClick={() => {
+                setPlatform(opt);
+                trackClick(`social-tab:${workView}:${opt}`);
+              }}
               className={cn(
                 "h-11 rounded-full px-3 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                 platform === opt ? "bg-foreground text-background" : "bg-muted text-muted-foreground",

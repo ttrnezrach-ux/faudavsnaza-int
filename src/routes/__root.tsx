@@ -2,6 +2,7 @@ import { createRootRoute, HeadContent, Outlet, Scripts } from "@tanstack/react-r
 import { AuthProvider } from "@/lib/auth/provider";
 import { PreviewHostBridge } from "@/components/preview-host-bridge";
 import { parseShareLang, seoFor } from "@/lib/seo";
+import { SiteAnalytics } from "@/components/site-analytics";
 import { GA_ID, UC_SETTINGS_ID } from "@/lib/ga";
 import { LOCALES, LOCALE_META, type Locale } from "@/lib/i18n";
 import { isContentTab, isWorkViewParam, deepShareUrl, ogImageAbs, shareCore, type ContentTab } from "@/lib/share";
@@ -113,6 +114,8 @@ function RootShell() {
         <AuthProvider>
           <Outlet />
         </AuthProvider>
+        {/* First-party /office (track.ts) and Google Analytics (head + ga.ts) stay. Vercel Web Analytics and Speed Insights sit on top. */}
+        <SiteAnalytics />
         <Scripts />
       </body>
     </html>
