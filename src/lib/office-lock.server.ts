@@ -2,6 +2,7 @@ import { createHmac, timingSafeEqual } from "node:crypto";
 import { getCookie, getRequest, setCookie } from "@tanstack/react-start/server";
 import QRCode from "qrcode";
 import { formatSecret, otpauthUrl, verifyTotp } from "@/lib/totp";
+import { markOwnerDevice } from "@/lib/traffic-gate.server";
 import type { OfficeLockState } from "@/lib/office-lock";
 
 const COOKIE = "office_unlock";
@@ -137,6 +138,7 @@ export async function verifyOfficeCredentials(code: string, password: string): P
   clearFails();
   const exp = Math.floor(Date.now() / 1000) + TTL;
   setCookie(COOKIE, sign(OFFICE_TOTP_SECRET, exp), { ...cookieOpts(), maxAge: TTL });
+  markOwnerDevice();
   return { status: "unlocked" };
 }
 

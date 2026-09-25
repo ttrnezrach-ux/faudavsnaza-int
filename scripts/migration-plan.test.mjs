@@ -10,7 +10,7 @@ import {
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { test } from "node:test";
-import { isMigrationFile, migrationName, pendingMigrations } from "./migration-plan.mjs";
+import { isMigrationFile, migrationName, pendingMigrations, splitSqlStatements } from "./migration-plan.mjs";
 import { projectRoot } from "./with-app-env.mjs";
 
 const AUTH_MIGRATION = "0001_auth.sql";
@@ -54,6 +54,13 @@ test("pending migrations are returned in name order", () => {
 test("non-.sql entries are dropped (readdir also yields the auth/ directory)", () => {
   assert.equal(isMigrationFile("auth"), false);
   assert.deepEqual(pendingMigrations(["auth", "README.md"], []), []);
+});
+
+test("sql files split on semicolons and keep quoted semicolons", () => {
+  assert.deepEqual(splitSqlStatements("-- note\ncreate table t (id int);\ninsert into t values ('a;b');"), [
+    "create table t (id int)",
+    "insert into t values ('a;b')",
+  ]);
 });
 
 test("the auth schema ships outside the globbed directory", () => {

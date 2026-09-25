@@ -8,8 +8,16 @@ import { isContentTab, isWorkViewParam, deepShareUrl, ogImageAbs, shareCore, typ
 import type { WorkView } from "@/lib/work";
 import { formatReleaseVersion, RELEASE } from "@/lib/release";
 import appCss from "../styles.css?url";
+import { noteDocumentTraffic } from "@/lib/traffic-gate";
 
 export const Route = createRootRoute({
+  beforeLoad: async () => {
+    try {
+      await noteDocumentTraffic();
+    } catch (err) {
+      console.error("[traffic] document filter failed:", err);
+    }
+  },
   validateSearch: (raw: Record<string, unknown>): { lang?: Locale; work?: string; tab?: string } => {
     const out: { lang?: Locale; work?: string; tab?: string } = {};
     if (typeof raw.lang === "string" && (LOCALES as readonly string[]).includes(raw.lang)) {

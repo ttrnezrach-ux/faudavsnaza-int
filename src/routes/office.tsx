@@ -15,6 +15,7 @@ import { VersionStamp } from "@/components/version-stamp";
 import { WeekScan } from "@/components/week-scan";
 import { VersionsPanel } from "@/components/versions-panel";
 import { OfficeTraffic } from "@/components/office-traffic";
+import { getDeviceExclusion, setDeviceExclusion } from "@/lib/traffic-gate";
 
 export const Route = createFileRoute("/office")({
   component: OfficePage,
@@ -116,6 +117,40 @@ function formatTime(sec: number): string {
   return `${m}:${String(s).padStart(2, "0")}`;
 }
 
+function ExcludeDeviceToggle() {
+  const { t } = useI18n();
+  const [excluded, setExcluded] = useState(true);
+
+  useEffect(() => {
+    void getDeviceExclusion()
+      .then((row) => setExcluded(row.excluded))
+      .catch(() => {});
+  }, []);
+
+  return (
+    <div className="flex max-w-full flex-col gap-1">
+      <button
+        type="button"
+        aria-pressed={excluded}
+        className="inline-flex h-11 items-center gap-2 self-start rounded-md px-3 text-sm font-medium shadow-[var(--shadow-border)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        onClick={() => {
+          const next = !excluded;
+          setExcluded(next);
+          void setDeviceExclusion({ data: { exclude: next } })
+            .then((row) => setExcluded(row.excluded))
+            .catch(() => setExcluded(!next));
+        }}
+      >
+        <span className={`size-2.5 rounded-full ${excluded ? "bg-heat" : "bg-muted-foreground/40"}`} aria-hidden="true" />
+        {t("excludeDevice")}
+      </button>
+      <p className="max-w-xs text-xs leading-snug text-muted-foreground">
+        {excluded ? t("excludeDeviceOn") : t("excludeDeviceOff")}
+      </p>
+    </div>
+  );
+}
+
 function OfficePage() {
   return (
     <AppShell>
@@ -190,6 +225,7 @@ function OfficeBody() {
                 </button>
               ))}
             </div>
+            <ExcludeDeviceToggle />
             <Button type="button" variant="secondary" className="h-11" onClick={load}>
               {t("refresh")}
             </Button>
@@ -222,6 +258,7 @@ function OfficeBody() {
               anomaly: stats.anomaly,
               durable: stats.durable,
             }}
+            botHits={stats.botHits}
           />
         ) : null}
 

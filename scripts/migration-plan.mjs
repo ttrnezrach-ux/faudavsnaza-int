@@ -44,3 +44,48 @@ export function pendingMigrations(paths, applied) {
     .sort((a, b) => a.name.localeCompare(b.name))
     .filter(({ name }) => !done.has(name));
 }
+
+/**
+ * Split a migration file into statements. Neon’s pooled connection rejects
+ * several commands in one prepared statement, so both appliers run these
+ * one at a time inside a transaction.
+ * @param {string} sql
+ * @returns {string[]}
+ */
+export function splitSqlStatements(sql) {
+  /** @type {string[]} */
+  const statements = [];
+  let current = "";
+  let inSingle = false;
+  for (let i = 0; i < sql.length; i += 1) {
+    const ch = sql[i];
+    if (ch === "'") {
+      if (inSingle && sql[i + 1] === "'") {
+        current += "''";
+        i += 1;
+        continue;
+      }
+      inSingle = !inSingle;
+      current += ch;
+      continue;
+    }
+    if (ch === ";" && !inSingle) {
+      push(current);
+      current = "";
+      continue;
+    }
+    current += ch;
+  }
+  push(current);
+  return statements;
+
+  /** @param {string} raw */
+  function push(raw) {
+    const stripped = raw
+      .split("\n")
+      .filter((line) => !line.trim().startsWith("--"))
+      .join("\n")
+      .trim();
+    if (stripped) statements.push(stripped);
+  }
+}

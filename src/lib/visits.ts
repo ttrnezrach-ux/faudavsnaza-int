@@ -14,7 +14,7 @@ import {
   type TrafficSnapshot,
 } from "@/lib/visit-counter";
 import { countryFromTimezone, normalizeCountry } from "@/lib/geo";
-import { clientAddr, isBotRequest } from "@/lib/client-ip";
+import { clientAddr } from "@/lib/client-ip";
 
 export type VisitStats = {
   total: number;
@@ -138,6 +138,7 @@ export type OfficeStats = {
   days: DayVisit[];
   hours: HourVisit[];
   anomaly: TrafficAnomaly;
+  botHits: number;
   funnel: { land: number; explore: number; share: number; contact: number; office: number };
   goals: GoalStat[];
   durationBuckets: NamedCount[];
@@ -168,6 +169,11 @@ const behaviorInput = z.object({
   googleProduct: z.enum(["search", "news", "images", "ads", "maps", "other"]).optional(),
   campaign: z.string().regex(/^[a-zA-Z0-9._-]{1,64}$/).optional(),
 });
+
+async function blockUncounted(): Promise<boolean> {
+  const { blockUncountedTraffic } = await import("@/lib/traffic-gate.server");
+  return blockUncountedTraffic();
+}
 
 function countryFromHeaders(timezone?: string): string | null {
   const request = getRequest();
@@ -206,7 +212,7 @@ export const getVisitStats = createServerFn({ method: "GET" }).handler(async () 
 
 export const recordRequestVisit = createServerFn({ method: "POST" }).handler(async () => {
   try {
-    if (isBotRequest()) return { ok: true as const };
+    if (await blockUncounted()) return { ok: true as const };
     const addr = clientAddr();
     if (!addr.ok) return { ok: true as const };
     const sql = await getSql();
@@ -234,10 +240,10 @@ export const recordUniqueVisit = createServerFn({ method: "POST" })
   .validator((input: unknown) => visitorInput.parse(input))
   .handler(async ({ data }) => {
     try {
+      if (await blockUncounted()) return await readStats();
       const sql = await getSql();
       const country = countryFromHeaders(data.timezone);
       const addr = clientAddr();
-      const bot = isBotRequest();
       await sql`
       insert into unique_visitors (visitor_key, first_seen, last_seen, country_code, visit_count, ip_hash, ip_hint)
       values (${data.visitorKey}, now(), now(), ${country}, 1, ${addr.ok ? addr.hash : null}, ${addr.ok ? addr.hint : null})
@@ -251,7 +257,7 @@ export const recordUniqueVisit = createServerFn({ method: "POST" })
         ip_hash = coalesce(excluded.ip_hash, unique_visitors.ip_hash),
         ip_hint = coalesce(excluded.ip_hint, unique_visitors.ip_hint)
     `;
-      if (addr.ok && !bot) {
+      if (addr.ok) {
         await sql`
       insert into unique_ips (ip_hash, ip_hint, ip, country_code, first_seen, last_seen, visit_count)
       values (${addr.hash}, ${addr.hint}, ${addr.ip}, ${country}, now(), now(), 1)
@@ -276,9 +282,9 @@ export const recordUniqueVisit = createServerFn({ method: "POST" })
 export const recordClick = createServerFn({ method: "POST" })
   .validator((input: unknown) => clickInput.parse(input))
   .handler(async ({ data }) => {
+    if (await blockUncounted()) return { ok: true as const };
     const sql = await getSql();
     const country = countryFromHeaders(data.timezone);
-    if (isBotRequest()) return { ok: true as const };
     const addr = clientAddr();
     await sql`
       insert into click_events (visitor_key, target, country_code, ip_hash, ip_hint, ip, created_at)
@@ -290,7 +296,7 @@ export const recordClick = createServerFn({ method: "POST" })
 export const recordBehavior = createServerFn({ method: "POST" })
   .validator((input: unknown) => behaviorInput.parse(input))
   .handler(async ({ data }) => {
-    if (isBotRequest()) return { ok: true as const };
+    if (await blockUncounted()) return { ok: true as const };
     const sql = await getSql();
     const country = countryFromHeaders(data.timezone);
     const addr = clientAddr();
@@ -336,7 +342,7 @@ const sessionTouchInput = z.object({
 export const touchSession = createServerFn({ method: "POST" })
   .validator((input: unknown) => sessionTouchInput.parse(input))
   .handler(async ({ data }) => {
-    if (isBotRequest()) return { ok: true as const };
+    if (await blockUncounted()) return { ok: true as const };
     const sql = await getSql();
     await sql`
       update sessions set last_seen = now()
@@ -571,6 +577,7 @@ export const getOfficeStats = createServerFn({ method: "GET" })
     days: fillDaySeries([]),
     hours: [],
     anomaly: trafficAnomaly([]),
+    botHits: 0,
     google: { sessions: 0, products: [], hosts: [], countries: [], landings: [], campaigns: [] },
     funnel: { land: 0, explore: 0, share: 0, contact: 0, office: 0 },
     goals: [],
@@ -885,6 +892,7 @@ export const getOfficeStats = createServerFn({ method: "GET" })
     ) d
     group by name
   `;
+  const [botRow] = await sql<{ n: number }>`select count(*)::int as n from bot_hits`;
   const bounced = summary?.bounced ?? 0;
   const views = summary?.views ?? 0;
   const pageviews = pages.reduce((n, p) => n + p.count, 0);
@@ -934,6 +942,7 @@ export const getOfficeStats = createServerFn({ method: "GET" })
     days: fillDaySeries([]),
     hours: [],
     anomaly: trafficAnomaly([]),
+    botHits: botRow?.n ?? 0,
     allTimeVisits: (summary?.all_time_visits ?? 0) + VISIT_BASELINE,
     allTimeUnique: summary?.all_time_unique ?? 0,
     periodVisits: summary?.period_visits ?? views,
