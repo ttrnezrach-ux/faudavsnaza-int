@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useI18n } from "@/lib/i18n";
 import { submitContact } from "@/lib/contact";
+import { trackClick } from "@/lib/track";
 
 type Status = "idle" | "sending" | "success" | "error" | "cooldown" | "invalid";
 
@@ -21,6 +22,7 @@ export function ContactBox() {
     e.preventDefault();
     if (!ready || status === "sending") return;
     setStatus("sending");
+    trackClick("contact:submit");
     try {
       const result = await submitContact({
         data: {
@@ -38,11 +40,15 @@ export function ContactBox() {
         setMessage("");
         setCompany("");
         setStatus("success");
+        trackClick("contact:success");
         return;
       }
-      setStatus(result.error === "cooldown" ? "cooldown" : result.error === "invalid" ? "invalid" : "error");
+      const next = result.error === "cooldown" ? "cooldown" : result.error === "invalid" ? "invalid" : "error";
+      setStatus(next);
+      trackClick(`contact:${next}`);
     } catch {
       setStatus("error");
+      trackClick("contact:error");
     }
   }
 

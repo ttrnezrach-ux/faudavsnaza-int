@@ -2,6 +2,8 @@ import { dbSource, getSql } from "@/lib/db";
 import {
   VISIT_BASELINE,
   fillDaySeries,
+  fillHourSeries,
+  trafficAnomaly,
   typicalDayVisits,
   withBaseline,
   type DayVisit,
@@ -17,6 +19,7 @@ import {
 export async function loadTrafficSnapshot(now = new Date()): Promise<TrafficSnapshot> {
   const durable = dbSource === "neon";
   const days = fillDaySeries([], now);
+  const hours = fillHourSeries([], now);
   const blank = (): TrafficSnapshot => ({
     total: withBaseline(0),
     baseline: VISIT_BASELINE,
@@ -25,6 +28,8 @@ export async function loadTrafficSnapshot(now = new Date()): Promise<TrafficSnap
     last24h: 0,
     typicalDay: typicalDayVisits(days),
     days,
+    hours,
+    anomaly: trafficAnomaly(days),
     durable,
   });
 
@@ -65,8 +70,27 @@ export async function loadTrafficSnapshot(now = new Date()): Promise<TrafficSnap
       group by day
       order by day
     `;
+    const hourRows = await sql<{ hour: string; visits: number }>`
+      select hour, count(*)::int as visits
+      from (
+        select
+          to_char(date_trunc('hour', created_at at time zone 'utc'), 'YYYY-MM-DD"T"HH24') as hour,
+          coalesce(ip_hash, visitor_key) as who,
+          floor(extract(epoch from created_at) / 1800) as win
+        from behavior_events
+        where kind = 'page'
+          and created_at > now() - interval '24 hours'
+        group by 1, 2, 3
+      ) buckets
+      group by hour
+      order by hour
+    `;
     const series = fillDaySeries(
       dayRows.map((r) => ({ date: String(r.date).slice(0, 10), visits: r.visits })),
+      now,
+    );
+    const hourSeries = fillHourSeries(
+      hourRows.map((r) => ({ hour: String(r.hour).slice(0, 13), visits: r.visits })),
       now,
     );
     const counted = row?.counted ?? 0;
@@ -78,9 +102,12 @@ export async function loadTrafficSnapshot(now = new Date()): Promise<TrafficSnap
       last24h: row?.last_24h ?? 0,
       typicalDay: typicalDayVisits(series),
       days: series,
+      hours: hourSeries,
+      anomaly: trafficAnomaly(series),
       durable,
     };
-  } catch {
+  } catch (err) {
+    console.error("[traffic] snapshot failed:", err);
     return blank();
   }
 }
@@ -92,6 +119,7 @@ export function monitorBody(snapshot: TrafficSnapshot): {
   lastHour: number;
   last24h: number;
   days: DayVisit[];
+  anomaly: TrafficSnapshot["anomaly"];
   durable: boolean;
 } {
   return {
@@ -101,6 +129,7 @@ export function monitorBody(snapshot: TrafficSnapshot): {
     lastHour: snapshot.lastHour,
     last24h: snapshot.last24h,
     days: snapshot.days,
+    anomaly: snapshot.anomaly,
     durable: snapshot.durable,
   };
 }

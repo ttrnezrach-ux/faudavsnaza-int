@@ -1,4 +1,4 @@
-/** Timezone → ISO 3166-1 alpha-2. Used only when the edge did not send a country header. Never stores IP. */
+/** Timezone → ISO 3166-1 alpha-2. Used only when the edge did not send a country header. */
 const TZ_COUNTRY: Record<string, string> = {
   "Asia/Jerusalem": "IL",
   "Asia/Gaza": "PS",

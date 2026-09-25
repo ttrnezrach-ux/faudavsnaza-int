@@ -1,4 +1,4 @@
-import { trafficPace, type TrafficSnapshot } from "@/lib/visit-counter";
+import { isSeriesSpike, trafficPace, type TrafficSnapshot } from "@/lib/visit-counter";
 import { useI18n } from "@/lib/i18n";
 
 export function OfficeTraffic({
@@ -6,11 +6,23 @@ export function OfficeTraffic({
 }: {
   traffic: Pick<
     TrafficSnapshot,
-    "total" | "baseline" | "counted" | "lastHour" | "last24h" | "typicalDay" | "days" | "durable"
+    | "total"
+    | "baseline"
+    | "counted"
+    | "lastHour"
+    | "last24h"
+    | "typicalDay"
+    | "days"
+    | "hours"
+    | "anomaly"
+    | "durable"
   >;
 }) {
   const { t, locale } = useI18n();
   const pace = trafficPace(traffic.last24h, traffic.typicalDay);
+  const anomaly = traffic.anomaly;
+  const dayValues = traffic.days.map((day) => day.visits);
+  const hourValues = traffic.hours.map((hour) => hour.visits);
   const paceLabel =
     pace === "above"
       ? t("trafficAbove")
@@ -51,21 +63,73 @@ export function OfficeTraffic({
         <span className="tabular-nums">{traffic.typicalDay.toLocaleString(locale)}</span>
         <span className="text-muted-foreground"> {t("trafficTypical")}</span>
       </p>
+      <p className="text-sm leading-relaxed">
+        <span className="text-muted-foreground">
+          {t("trafficAnomaly", {
+            today: anomaly.today.toLocaleString(locale),
+            average: anomaly.average.toLocaleString(locale),
+            stddev: anomaly.stddev.toLocaleString(locale),
+          })}
+        </span>{" "}
+        <span className="font-medium tabular-nums">
+          {t("trafficZ", { z: anomaly.zScore == null ? "—" : anomaly.zScore.toLocaleString(locale) })}
+        </span>
+        {anomaly.deviationPct != null ? (
+          <span className="text-muted-foreground">
+            {" "}
+            · {t("trafficDeviation", { pct: `${anomaly.deviationPct > 0 ? "+" : ""}${anomaly.deviationPct}` })}
+          </span>
+        ) : null}
+        {anomaly.spike ? (
+          <span className="ms-2 inline-flex items-center rounded-full bg-negative-soft px-2 py-0.5 text-xs font-medium text-negative">
+            {t("trafficSpike")}
+          </span>
+        ) : null}
+      </p>
+
+      <div>
+        <h3 className="text-sm font-medium">{t("trafficHoursTitle")}</h3>
+        <p className="mt-1 text-xs text-muted-foreground">{t("trafficUtc")}</p>
+        <div className="mt-3 flex items-end gap-0.5" role="img" aria-label={t("trafficHoursTitle")}>
+          {traffic.hours.map((hour) => {
+            const spike = isSeriesSpike(hour.visits, hourValues);
+            const hourMax = Math.max(1, ...hourValues);
+            return (
+              <div key={hour.hour} className="flex min-w-0 flex-1 flex-col items-center gap-1" title={`${hour.hour.slice(11)} · ${hour.visits}`}>
+                <div className="flex h-16 w-full items-end rounded-sm bg-muted">
+                  <div
+                    className={`w-full rounded-sm ${spike ? "bg-negative" : "bg-heat"}`}
+                    style={{ height: `${Math.max(hour.visits ? 8 : 0, (hour.visits / hourMax) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="mt-1 flex justify-between text-[10px] tabular-nums text-muted-foreground">
+          <span>{traffic.hours[0]?.hour.slice(11) ?? ""}</span>
+          <span>{traffic.hours[12]?.hour.slice(11) ?? ""}</span>
+          <span>{traffic.hours[23]?.hour.slice(11) ?? ""}</span>
+        </div>
+      </div>
 
       <div>
         <h3 className="text-sm font-medium">{t("trafficDaysTitle")}</h3>
         <div className="mt-3 flex items-end gap-1" role="img" aria-label={t("trafficDaysTitle")}>
-          {traffic.days.map((day) => (
+          {traffic.days.map((day) => {
+            const spike = isSeriesSpike(day.visits, dayValues) || (day.date === traffic.days.at(-1)?.date && anomaly.spike);
+            return (
             <div key={day.date} className="flex min-w-0 flex-1 flex-col items-center gap-1">
               <div className="flex h-16 w-full items-end rounded-sm bg-muted">
                 <div
-                  className="w-full rounded-sm bg-heat"
+                  className={`w-full rounded-sm ${spike ? "bg-negative" : "bg-heat"}`}
                   style={{ height: `${Math.max(day.visits ? 8 : 0, (day.visits / max) * 100)}%` }}
                 />
               </div>
               <span className="text-[10px] tabular-nums text-muted-foreground">{day.date.slice(8)}</span>
             </div>
-          ))}
+            );
+          })}
         </div>
         <ul className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground sm:grid-cols-4">
           {traffic.days.map((day) => (

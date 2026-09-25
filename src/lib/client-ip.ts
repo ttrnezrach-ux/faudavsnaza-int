@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { getRequest } from "@tanstack/react-start/server";
 
-export type ClientAddr = { hash: string; hint: string; ok: boolean };
+export type ClientAddr = { hash: string; hint: string; ip: string; ok: boolean };
 
 function rawIp(): string {
   const headers = getRequest()?.headers;
@@ -41,7 +41,7 @@ export function isBotRequest(): boolean {
 
 export function clientAddr(): ClientAddr {
   const ip = rawIp();
-  if (!ip) return { hash: "", hint: "", ok: false };
+  if (!ip) return { hash: "", hint: "", ip: "", ok: false };
   const hash = createHash("sha256").update(ip).digest("hex").slice(0, 16);
-  return { hash, hint: maskIp(ip) || hash.slice(0, 8), ok: true };
+  return { hash, hint: maskIp(ip) || hash.slice(0, 8), ip, ok: true };
 }

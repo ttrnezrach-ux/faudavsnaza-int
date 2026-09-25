@@ -396,7 +396,10 @@ export function Dashboard() {
                 type="button"
                 role="radio"
                 aria-checked={mode === "rank"}
-                onClick={() => setMode("rank")}
+                onClick={() => {
+                  setMode("rank");
+                  trackClick("mode:rank");
+                }}
                 className={cn(
                   "h-11 rounded-md px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   mode === "rank" ? "bg-card text-foreground shadow-[var(--shadow-border)]" : "text-muted-foreground",
@@ -408,7 +411,10 @@ export function Dashboard() {
                 type="button"
                 role="radio"
                 aria-checked={mode === "tone"}
-                onClick={() => setMode("tone")}
+                onClick={() => {
+                  setMode("tone");
+                  trackClick("mode:tone");
+                }}
                 className={cn(
                   "h-11 rounded-md px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   mode === "tone" ? "bg-card text-foreground shadow-[var(--shadow-border)]" : "text-muted-foreground",
@@ -420,7 +426,10 @@ export function Dashboard() {
                 type="button"
                 role="radio"
                 aria-checked={mode === "social"}
-                onClick={() => setMode("social")}
+                onClick={() => {
+                  setMode("social");
+                  trackClick("mode:social");
+                }}
                 className={cn(
                   "h-11 rounded-md px-3 text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   mode === "social" ? "bg-card text-foreground shadow-[var(--shadow-border)]" : "text-muted-foreground",
@@ -713,7 +722,10 @@ export function Dashboard() {
                       key={toneOpt}
                       type="button"
                       aria-pressed={tone === toneOpt}
-                      onClick={() => setTone(toneOpt)}
+                      onClick={() => {
+                        setTone(toneOpt);
+                        trackClick(`tone:${toneOpt}`);
+                      }}
                       className={cn(
                         "h-11 rounded-full px-3 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                         tone === toneOpt ? "bg-foreground text-background" : "bg-muted text-muted-foreground",
@@ -729,7 +741,10 @@ export function Dashboard() {
                       key={r}
                       type="button"
                       aria-pressed={region === r}
-                      onClick={() => setRegion(r)}
+                      onClick={() => {
+                        setRegion(r);
+                        trackClick(`region:${r}`);
+                      }}
                       className={cn(
                         "h-11 rounded-full px-3 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                         region === r ? "bg-secondary text-foreground" : "bg-transparent text-muted-foreground shadow-[var(--shadow-border)]",
@@ -745,7 +760,10 @@ export function Dashboard() {
                       key={opt}
                       type="button"
                       aria-pressed={coverage === opt}
-                      onClick={() => setCoverage(opt)}
+                      onClick={() => {
+                        setCoverage(opt);
+                        trackClick(`coverage:${opt}`);
+                      }}
                       className={cn(
                         "h-11 rounded-full px-3 text-xs font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                         coverage === opt ? "bg-secondary text-foreground" : "bg-transparent text-muted-foreground shadow-[var(--shadow-border)]",

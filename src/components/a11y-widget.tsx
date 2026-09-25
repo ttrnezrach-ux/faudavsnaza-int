@@ -9,6 +9,7 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { trackClick } from "@/lib/track";
 
 const STORAGE_KEY = "fauda-a11y";
 
@@ -83,7 +84,9 @@ export function A11yWidget() {
     return () => document.removeEventListener("keydown", onKey);
   }, [open]);
 
-  function update(patch: Partial<Prefs>) {
+  function update(patch: Partial<Prefs>, name?: string) {
+    const key = name ?? Object.keys(patch)[0] ?? "change";
+    trackClick(`a11y:${key}`);
     setPrefs((prev) => {
       const next = { ...prev, ...patch };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
@@ -104,6 +107,7 @@ export function A11yWidget() {
         aria-label={open ? "סגירת תפריט נגישות" : "פתיחת תפריט נגישות"}
         onClick={() =>
           setOpen((v) => {
+            trackClick(v ? "a11y:close" : "a11y:open");
             if (v) launcherRef.current?.focus();
             return !v;
           })
@@ -130,7 +134,7 @@ export function A11yWidget() {
                   <button
                     key={n}
                     type="button"
-                    onClick={() => update({ scale: n })}
+                    onClick={() => update({ scale: n }, `scale-${n}`)}
                     aria-pressed={prefs.scale === n}
                     className={cn(
                       "h-11 flex-1 rounded-md text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
@@ -147,7 +151,7 @@ export function A11yWidget() {
             <li>
               <Toggle
                 pressed={prefs.contrast}
-                onToggle={() => update({ contrast: !prefs.contrast })}
+                onToggle={() => update({ contrast: !prefs.contrast }, "contrast")}
                 icon={Contrast}
                 label="ניגודיות גבוהה"
               />
@@ -155,7 +159,7 @@ export function A11yWidget() {
             <li>
               <Toggle
                 pressed={prefs.readable}
-                onToggle={() => update({ readable: !prefs.readable })}
+                onToggle={() => update({ readable: !prefs.readable }, "readable")}
                 icon={Type}
                 label="גופן קריא"
               />
@@ -163,7 +167,7 @@ export function A11yWidget() {
             <li>
               <Toggle
                 pressed={prefs.links}
-                onToggle={() => update({ links: !prefs.links })}
+                onToggle={() => update({ links: !prefs.links }, "links")}
                 icon={Link2}
                 label="הדגשת קישורים"
               />
@@ -171,7 +175,7 @@ export function A11yWidget() {
             <li>
               <Toggle
                 pressed={prefs.pause}
-                onToggle={() => update({ pause: !prefs.pause })}
+                onToggle={() => update({ pause: !prefs.pause }, "pause")}
                 icon={Pause}
                 label="עצירת אנימציות"
               />
@@ -180,7 +184,7 @@ export function A11yWidget() {
           <button
             type="button"
             className="mt-3 flex h-11 w-full items-center justify-center gap-2 rounded-md bg-muted text-sm font-medium focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-            onClick={() => update(DEFAULT)}
+            onClick={() => update(DEFAULT, "reset")}
           >
             <ALargeSmall className="size-4" aria-hidden="true" />
             איפוס הגדרות

@@ -28,6 +28,21 @@ export type DayVisit = {
   visits: number;
 };
 
+export type HourVisit = {
+  /** UTC hour key `YYYY-MM-DDTHH`. */
+  hour: string;
+  visits: number;
+};
+
+export type TrafficAnomaly = {
+  today: number;
+  average: number;
+  stddev: number;
+  zScore: number | null;
+  deviationPct: number | null;
+  spike: boolean;
+};
+
 export type TrafficSnapshot = {
   total: number;
   baseline: number;
@@ -36,8 +51,13 @@ export type TrafficSnapshot = {
   last24h: number;
   typicalDay: number;
   days: DayVisit[];
+  hours: HourVisit[];
+  anomaly: TrafficAnomaly;
   durable: boolean;
 };
+
+/** Full IP addresses in the office are cleared after this many days. */
+export const IP_RETENTION_DAYS = 90;
 
 export type TrafficPace = "quiet" | "normal" | "above" | "below";
 
@@ -72,6 +92,55 @@ export function withBaseline(counted: number): number {
  * "Above" means at least double a non-zero typical day, and at least 3 visits,
  * so a single extra hit on a quiet site is not an alarm.
  */
+function round1(n: number): number {
+  return Math.round(n * 10) / 10;
+}
+
+export function fillHourSeries(rows: HourVisit[], now = new Date()): HourVisit[] {
+  const map = new Map(rows.map((row) => [row.hour.slice(0, 13), row.visits]));
+  const start = new Date(now);
+  start.setUTCMinutes(0, 0, 0);
+  const out: HourVisit[] = [];
+  for (let i = 23; i >= 0; i -= 1) {
+    const d = new Date(start.getTime() - i * 3600_000);
+    const hour = d.toISOString().slice(0, 13);
+    out.push({ hour, visits: map.get(hour) ?? 0 });
+  }
+  return out;
+}
+
+/** Today versus the mean and population standard deviation of the prior 13 days. */
+export function trafficAnomaly(days: DayVisit[]): TrafficAnomaly {
+  const today = days.length ? days[days.length - 1]!.visits : 0;
+  const prior = days.slice(0, -1).map((day) => day.visits);
+  const n = prior.length;
+  const average = n ? prior.reduce((sum, value) => sum + value, 0) / n : 0;
+  const variance = n ? prior.reduce((sum, value) => sum + (value - average) ** 2, 0) / n : 0;
+  const stddev = Math.sqrt(variance);
+  const zScore = stddev > 0 ? (today - average) / stddev : null;
+  const deviationPct = average > 0 ? ((today - average) / average) * 100 : null;
+  const spike =
+    today >= 3 && ((zScore != null && zScore >= 2) || (average > 0 && today >= average * 2));
+  return {
+    today,
+    average: round1(average),
+    stddev: round1(stddev),
+    zScore: zScore == null ? null : round1(zScore),
+    deviationPct: deviationPct == null ? null : Math.round(deviationPct),
+    spike,
+  };
+}
+
+/** A bar is a spike when it sits at least two standard deviations above its series, and is at least 3. */
+export function isSeriesSpike(visits: number, series: number[]): boolean {
+  if (visits < 3 || series.length < 2) return false;
+  const n = series.length;
+  const average = series.reduce((sum, value) => sum + value, 0) / n;
+  const variance = series.reduce((sum, value) => sum + (value - average) ** 2, 0) / n;
+  const stddev = Math.sqrt(variance);
+  return stddev > 0 && visits >= average + 2 * stddev;
+}
+
 export function trafficPace(last24h: number, typicalDay: number): TrafficPace {
   if (last24h <= 0 && typicalDay <= 0) return "quiet";
   if (typicalDay > 0 && last24h >= typicalDay * 2 && last24h >= 3) return "above";
