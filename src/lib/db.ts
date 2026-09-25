@@ -1,4 +1,4 @@
-import { pendingMigrations } from "../../scripts/migration-plan.mjs";
+import { pendingMigrations, splitSqlStatements } from "../../scripts/migration-plan.mjs";
 
 /** Which database backend is active. */
 export type DbSource = "neon" | "pglite";
@@ -85,6 +85,49 @@ function toSql(run: Run): Sql {
   return sql;
 }
 
+function migrationSources(): Record<string, string> {
+  return import.meta.glob("/migrations/*.sql", {
+    query: "?raw",
+    import: "default",
+    eager: true,
+  }) as Record<string, string>;
+}
+
+/**
+ * Apply `migrations/*.sql` on a single connection. Runs on first use of
+ * `DATABASE_URL`, so a newly attached Neon database gets its tables without
+ * waiting for the next build. Each file is one transaction; a pooled Neon
+ * endpoint receives one statement at a time.
+ */
+async function applyNeonMigrations(client: {
+  query: (text: string, params?: unknown[]) => Promise<{ rows: unknown[] }>;
+}): Promise<void> {
+  await client.query(
+    "create table if not exists _migrations (name text primary key, applied_at timestamptz not null default now())",
+  );
+  await client.query("BEGIN");
+  try {
+    await client.query("select pg_advisory_xact_lock(2147483001)");
+    const doneRows = await client.query("select name from _migrations");
+    const done = (doneRows.rows as { name: string }[]).map((row) => row.name);
+    const migrations = migrationSources();
+    for (const { name, path } of pendingMigrations(Object.keys(migrations), done)) {
+      for (const statement of splitSqlStatements(migrations[path] ?? "")) {
+        await client.query(statement);
+      }
+      await client.query("insert into _migrations (name) values ($1)", [name]);
+    }
+    await client.query("COMMIT");
+  } catch (err) {
+    try {
+      await client.query("ROLLBACK");
+    } catch {
+      // The connection may already be aborted.
+    }
+    throw err;
+  }
+}
+
 function createNeonSql(): Promise<Sql> {
   globalRef.__pgSqlPromise__ ??= (async () => {
     // Regular Postgres driver: node-postgres (`pg`) — works directly with Neon's
@@ -94,6 +137,17 @@ function createNeonSql(): Promise<Sql> {
     types.setTypeParser(OID_DATE, identity);
     types.setTypeParser(OID_INTERVAL, identity);
     const pool = new Pool({ connectionString: databaseUrl });
+    try {
+      const client = await pool.connect();
+      try {
+        await applyNeonMigrations(client);
+      } finally {
+        client.release();
+      }
+    } catch (err) {
+      await pool.end().catch(() => undefined);
+      throw err;
+    }
     return toSql(async <T>(text: string, params: unknown[]) => {
       const res = await pool.query(text, params);
       return res.rows as T[];
@@ -183,11 +237,7 @@ async function createPgliteSql(): Promise<Sql> {
   // passes serialized on a global chain so concurrent callers never
   // double-apply.
   const migrate = async (): Promise<void> => {
-    const migrations = import.meta.glob("/migrations/*.sql", {
-      query: "?raw",
-      import: "default",
-      eager: true,
-    }) as Record<string, string>;
+    const migrations = migrationSources();
     const doneRows = await pg.query<{ name: string }>(
       "select name from _migrations",
     );
@@ -260,13 +310,13 @@ export async function getPglite(): Promise<import("@electric-sql/pglite").PGlite
  *
  * - **PGLite** (preview / no `DATABASE_URL`): open the in-memory DB and apply
  *   `migrations/*.sql`. Idempotent — concurrent callers share one promise.
- * - **Neon**: no-op (pool is created lazily on first query).
+ * - **Neon** (`DATABASE_URL`): open the pool and apply the same migrations on
+ *   first use, including when the variable is added after the last build.
  *
  * Vite `configureServer` awaits this at dev startup; production imports of this
  * module kick it off immediately (see bottom of file).
  */
 export function ensureDbReady(): Promise<void> {
-  if (dbSource !== "pglite") return Promise.resolve();
   return getSql().then(() => undefined);
 }
 
@@ -275,12 +325,13 @@ export function ensureDbReady(): Promise<void> {
 const globalBoot = globalThis as typeof globalThis & {
   __pgBootstrapPromise__?: Promise<void>;
 };
-if (typeof window === "undefined" && dbSource === "pglite") {
+if (typeof window === "undefined") {
   // Do not rethrow: on Vercel the embedded database often cannot open
-  // (`ENOENT …/pglite.data`). A thrown bootstrap rejection kills the process.
-  // Callers of getSql() still see the failure and can say the store is not durable.
+  // (`ENOENT …/pglite.data`), and a new DATABASE_URL may be unreachable for a
+  // moment. A thrown bootstrap rejection kills the process. Callers of
+  // getSql() still see the failure and can say the store is not durable.
   globalBoot.__pgBootstrapPromise__ ??= ensureDbReady().catch((err) => {
     globalBoot.__pgBootstrapPromise__ = undefined;
-    console.error("[db] PGLite bootstrap failed:", err);
+    console.error("[db] database bootstrap failed:", err);
   });
 }

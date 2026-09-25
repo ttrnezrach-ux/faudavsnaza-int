@@ -3,6 +3,7 @@ import { useI18n } from "@/lib/i18n";
 
 export function OfficeTraffic({
   traffic,
+  botHits = 0,
 }: {
   traffic: Pick<
     TrafficSnapshot,
@@ -17,6 +18,7 @@ export function OfficeTraffic({
     | "anomaly"
     | "durable"
   >;
+  botHits?: number;
 }) {
   const { t, locale } = useI18n();
   const pace = trafficPace(traffic.last24h, traffic.typicalDay);
@@ -50,6 +52,11 @@ export function OfficeTraffic({
         <Stat label={t("trafficLastHour")} value={traffic.lastHour} locale={locale} />
         <Stat label={t("trafficLast24")} value={traffic.last24h} locale={locale} />
       </div>
+
+      <p className="text-sm text-muted-foreground">
+        <span className="font-medium tabular-nums text-foreground">{botHits.toLocaleString(locale)}</span>{" "}
+        {t("botHits")}. {t("botHitsHint")}
+      </p>
 
       <p className="text-sm text-muted-foreground">
         {t("trafficBaselineNote", { baseline: traffic.baseline, counted: traffic.counted })}

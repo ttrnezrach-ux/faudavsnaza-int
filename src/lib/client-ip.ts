@@ -1,5 +1,6 @@
 import { createHash } from "node:crypto";
 import { getRequest } from "@tanstack/react-start/server";
+import { isBotUserAgent } from "@/lib/traffic-filter";
 
 export type ClientAddr = { hash: string; hint: string; ip: string; ok: boolean };
 
@@ -30,13 +31,8 @@ function maskIp(ip: string): string {
   return "";
 }
 
-const BOT_UA =
-  /bot|crawler|spider|preview|facebookexternalhit|facebot|whatsapp|telegram|slack|discord|linkedinbot|twitterbot|googlebot|bingbot|yandex|baidu|duckduck|headless|playwright|puppeteer|curl|wget|python-requests|axios\//i;
-
 export function isBotRequest(): boolean {
-  const ua = getRequest()?.headers.get("user-agent") ?? "";
-  if (!ua.trim()) return true;
-  return BOT_UA.test(ua);
+  return isBotUserAgent(getRequest()?.headers.get("user-agent"));
 }
 
 export function clientAddr(): ClientAddr {
