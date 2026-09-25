@@ -14,6 +14,7 @@ import { OfficeOverview } from "@/components/office-overview";
 import { VersionStamp } from "@/components/version-stamp";
 import { WeekScan } from "@/components/week-scan";
 import { VersionsPanel } from "@/components/versions-panel";
+import { OfficeTraffic } from "@/components/office-traffic";
 
 export const Route = createFileRoute("/office")({
   component: OfficePage,
@@ -200,6 +201,21 @@ function OfficeBody() {
       <main id="main" tabIndex={-1} className="mx-auto w-full max-w-7xl space-y-6 px-4 py-6 outline-none sm:px-6">
         {failed ? (
           <p className="text-sm text-muted-foreground">{t("noData")}</p>
+        ) : null}
+
+        {stats ? (
+          <OfficeTraffic
+            traffic={{
+              total: stats.allTimeVisits,
+              baseline: stats.baseline,
+              counted: stats.counted,
+              lastHour: stats.lastHour,
+              last24h: stats.last24h,
+              typicalDay: stats.typicalDay,
+              days: stats.days,
+              durable: stats.durable,
+            }}
+          />
         ) : null}
 
         <section className="grid grid-cols-2 gap-3 sm:grid-cols-4" aria-label={t("officeTitle")}>
