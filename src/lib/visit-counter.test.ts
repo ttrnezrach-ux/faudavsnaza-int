@@ -6,6 +6,9 @@ import {
   SHOW_PUBLIC_VISIT_COUNTER,
   VISIT_BASELINE,
   fillDaySeries,
+  fillHourSeries,
+  isSeriesSpike,
+  trafficAnomaly,
   trafficPace,
   typicalDayVisits,
   withBaseline,
@@ -46,7 +49,44 @@ describe("14-day series", () => {
   });
 });
 
+describe("anomaly", () => {
+  it("compares today with the prior 13 days and flags a spike", () => {
+    const now = new Date("2026-09-25T12:00:00.000Z");
+    const days = fillDaySeries(
+      [
+        { date: "2026-09-24", visits: 2 },
+        { date: "2026-09-23", visits: 2 },
+        { date: "2026-09-25", visits: 20 },
+      ],
+      now,
+    );
+    const anomaly = trafficAnomaly(days);
+    assert.equal(anomaly.today, 20);
+    assert.ok(anomaly.average < 1);
+    assert.equal(anomaly.spike, true);
+    assert.ok(anomaly.zScore != null && anomaly.zScore > 2);
+    assert.equal(isSeriesSpike(20, days.map((day) => day.visits)), true);
+    assert.equal(isSeriesSpike(1, [0, 0, 1, 0]), false);
+  });
+
+  it("fills 24 UTC hours", () => {
+    const now = new Date("2026-09-25T15:40:00.000Z");
+    const hours = fillHourSeries([{ hour: "2026-09-25T15", visits: 4 }], now);
+    assert.equal(hours.length, 24);
+    assert.equal(hours[0]?.hour, "2026-09-24T16");
+    assert.equal(hours[23]?.hour, "2026-09-25T15");
+    assert.equal(hours[23]?.visits, 4);
+  });
+});
+
 describe("monitor token", () => {
+  it("monitor JSON adds the anomaly and leaves out addresses", () => {
+    const source = readFileSync(new URL("./traffic.server.ts", import.meta.url), "utf8");
+    const body = source.slice(source.indexOf("export function monitorBody"));
+    assert.match(body, /anomaly: snapshot\.anomaly/);
+    assert.doesNotMatch(body, /\bip\b|hint|country|visitor/);
+  });
+
   it("rejects a missing env var and a bad bearer token", () => {
     assert.equal(authorizeMonitor("Bearer secret", undefined), "unset");
     assert.equal(authorizeMonitor("Bearer secret", "   "), "unset");

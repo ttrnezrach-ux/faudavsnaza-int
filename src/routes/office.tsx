@@ -76,6 +76,11 @@ function clickLabel(target: string, locale: string, t: (k: string) => string): s
   if (kind === "source") {
     return rest;
   }
+  if (kind === "out") return rest;
+  if (kind === "contact") return `${t("funnelContact")} · ${rest}`;
+  if (kind === "a11y" || kind === "mode" || kind === "tone" || kind === "region" || kind === "coverage") {
+    return `${kind} · ${rest}`;
+  }
   if (kind === "social") {
     if (rest === "facebook") return t("netFacebook");
     if (rest === "x") return t("netX");
@@ -213,6 +218,8 @@ function OfficeBody() {
               last24h: stats.last24h,
               typicalDay: stats.typicalDay,
               days: stats.days,
+              hours: stats.hours,
+              anomaly: stats.anomaly,
               durable: stats.durable,
             }}
           />
@@ -307,6 +314,7 @@ function OfficeBody() {
                       ["funnelLand", stats.funnel.land],
                       ["funnelExplore", stats.funnel.explore],
                       ["funnelShare", stats.funnel.share],
+                      ["funnelContact", stats.funnel.contact],
                       ["funnelOffice", stats.funnel.office],
                     ] as const
                   ).map(([key, n]) => (

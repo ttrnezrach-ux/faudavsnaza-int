@@ -3,7 +3,16 @@ import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
 import { dbSource, getSql } from "@/lib/db";
 import { loadTrafficSnapshot } from "@/lib/traffic.server";
-import { VISIT_BASELINE, fillDaySeries, type DayVisit, type TrafficSnapshot } from "@/lib/visit-counter";
+import {
+  IP_RETENTION_DAYS,
+  VISIT_BASELINE,
+  fillDaySeries,
+  trafficAnomaly,
+  type DayVisit,
+  type HourVisit,
+  type TrafficAnomaly,
+  type TrafficSnapshot,
+} from "@/lib/visit-counter";
 import { countryFromTimezone, normalizeCountry } from "@/lib/geo";
 import { clientAddr, isBotRequest } from "@/lib/client-ip";
 
@@ -127,7 +136,9 @@ export type OfficeStats = {
   last24h: number;
   typicalDay: number;
   days: DayVisit[];
-  funnel: { land: number; explore: number; share: number; office: number };
+  hours: HourVisit[];
+  anomaly: TrafficAnomaly;
+  funnel: { land: number; explore: number; share: number; contact: number; office: number };
   goals: GoalStat[];
   durationBuckets: NamedCount[];
 };
@@ -201,8 +212,8 @@ export const recordRequestVisit = createServerFn({ method: "POST" }).handler(asy
     const sql = await getSql();
     const country = countryFromHeaders();
     await sql`
-      insert into unique_ips (ip_hash, ip_hint, country_code, first_seen, last_seen, visit_count)
-      values (${addr.hash}, ${addr.hint}, ${country}, now(), now(), 1)
+      insert into unique_ips (ip_hash, ip_hint, ip, country_code, first_seen, last_seen, visit_count)
+      values (${addr.hash}, ${addr.hint}, ${addr.ip}, ${country}, now(), now(), 1)
       on conflict (ip_hash) do update set
         last_seen = now(),
         visit_count = unique_ips.visit_count + case
@@ -210,7 +221,8 @@ export const recordRequestVisit = createServerFn({ method: "POST" }).handler(asy
           else 0
         end,
         country_code = coalesce(excluded.country_code, unique_ips.country_code),
-        ip_hint = coalesce(excluded.ip_hint, unique_ips.ip_hint)
+        ip_hint = coalesce(excluded.ip_hint, unique_ips.ip_hint),
+        ip = coalesce(excluded.ip, unique_ips.ip)
     `;
     return { ok: true as const };
   } catch {
@@ -241,8 +253,8 @@ export const recordUniqueVisit = createServerFn({ method: "POST" })
     `;
       if (addr.ok && !bot) {
         await sql`
-      insert into unique_ips (ip_hash, ip_hint, country_code, first_seen, last_seen, visit_count)
-      values (${addr.hash}, ${addr.hint}, ${country}, now(), now(), 1)
+      insert into unique_ips (ip_hash, ip_hint, ip, country_code, first_seen, last_seen, visit_count)
+      values (${addr.hash}, ${addr.hint}, ${addr.ip}, ${country}, now(), now(), 1)
       on conflict (ip_hash) do update set
         last_seen = now(),
         visit_count = unique_ips.visit_count + case
@@ -250,8 +262,10 @@ export const recordUniqueVisit = createServerFn({ method: "POST" })
           else 0
         end,
         country_code = coalesce(excluded.country_code, unique_ips.country_code),
-        ip_hint = coalesce(excluded.ip_hint, unique_ips.ip_hint)
+        ip_hint = coalesce(excluded.ip_hint, unique_ips.ip_hint),
+        ip = coalesce(excluded.ip, unique_ips.ip)
     `;
+        await forgetExpiredIps(sql);
       }
       return await readStats();
     } catch {
@@ -267,8 +281,8 @@ export const recordClick = createServerFn({ method: "POST" })
     if (isBotRequest()) return { ok: true as const };
     const addr = clientAddr();
     await sql`
-      insert into click_events (visitor_key, target, country_code, ip_hash, ip_hint, created_at)
-      values (${data.visitorKey}, ${data.target}, ${country}, ${addr.ok ? addr.hash : null}, ${addr.ok ? addr.hint : null}, now())
+      insert into click_events (visitor_key, target, country_code, ip_hash, ip_hint, ip, created_at)
+      values (${data.visitorKey}, ${data.target}, ${country}, ${addr.ok ? addr.hash : null}, ${addr.ok ? addr.hint : null}, ${addr.ok ? addr.ip : null}, now())
     `;
     return { ok: true as const };
   });
@@ -276,11 +290,13 @@ export const recordClick = createServerFn({ method: "POST" })
 export const recordBehavior = createServerFn({ method: "POST" })
   .validator((input: unknown) => behaviorInput.parse(input))
   .handler(async ({ data }) => {
+    if (isBotRequest()) return { ok: true as const };
     const sql = await getSql();
     const country = countryFromHeaders(data.timezone);
     const addr = clientAddr();
     const ipHash = addr.ok ? addr.hash : null;
     const ipHint = addr.ok ? addr.hint : null;
+    const ip = addr.ok ? addr.ip : null;
     const device = data.device ?? null;
     const source = data.source ?? null;
     const locale = data.locale ?? null;
@@ -305,11 +321,43 @@ export const recordBehavior = createServerFn({ method: "POST" })
         events = sessions.events + ${data.kind === "event" ? 1 : 0}
     `;
     await sql`
-      insert into behavior_events (visitor_key, session_key, kind, name, device, source, locale, country_code, ip_hash, ip_hint, created_at)
-      values (${data.visitorKey}, ${data.sessionKey}, ${data.kind}, ${data.name}, ${device}, ${source}, ${locale}, ${country}, ${ipHash}, ${ipHint}, now())
+      insert into behavior_events (visitor_key, session_key, kind, name, device, source, locale, country_code, ip_hash, ip_hint, ip, created_at)
+      values (${data.visitorKey}, ${data.sessionKey}, ${data.kind}, ${data.name}, ${device}, ${source}, ${locale}, ${country}, ${ipHash}, ${ipHint}, ${ip}, now())
     `;
     return { ok: true as const };
   });
+
+const sessionTouchInput = z.object({
+  visitorKey: z.string().regex(/^[a-zA-Z0-9-]{8,64}$/),
+  sessionKey: z.string().regex(/^[a-zA-Z0-9-]{8,64}$/),
+});
+
+/** Extends session length without counting another page view. Used for time on site. */
+export const touchSession = createServerFn({ method: "POST" })
+  .validator((input: unknown) => sessionTouchInput.parse(input))
+  .handler(async ({ data }) => {
+    if (isBotRequest()) return { ok: true as const };
+    const sql = await getSql();
+    await sql`
+      update sessions set last_seen = now()
+      where session_key = ${data.sessionKey} and visitor_key = ${data.visitorKey}
+    `;
+    return { ok: true as const };
+  });
+
+async function forgetExpiredIps(sql: Awaited<ReturnType<typeof getSql>>) {
+  const days = String(IP_RETENTION_DAYS);
+  const statements = [
+    `update behavior_events set ip = null where ip is not null and created_at < now() - ($1 || ' days')::interval`,
+    `update click_events set ip = null where ip is not null and created_at < now() - ($1 || ' days')::interval`,
+    `update unique_ips set ip = null where ip is not null and last_seen < now() - ($1 || ' days')::interval`,
+  ];
+  try {
+    for (const text of statements) await sql.query(text, [days]);
+  } catch (err) {
+    console.error("[visits] IP retention purge failed:", err);
+  }
+}
 
 function isoHour(v: string | Date): string {
   return typeof v === "string" ? v : v.toISOString();
@@ -488,6 +536,7 @@ export const getOfficeStats = createServerFn({ method: "GET" })
   const range = data.range;
   const since = sinceFor(range);
   const sql = await getSql();
+  await forgetExpiredIps(sql);
   const empty: OfficeStats = {
     total: 0,
     recent: 0,
@@ -520,8 +569,10 @@ export const getOfficeStats = createServerFn({ method: "GET" })
     last24h: 0,
     typicalDay: 0,
     days: fillDaySeries([]),
+    hours: [],
+    anomaly: trafficAnomaly([]),
     google: { sessions: 0, products: [], hosts: [], countries: [], landings: [], campaigns: [] },
-    funnel: { land: 0, explore: 0, share: 0, office: 0 },
+    funnel: { land: 0, explore: 0, share: 0, contact: 0, office: 0 },
     goals: [],
     durationBuckets: [],
   };
@@ -553,7 +604,11 @@ export const getOfficeStats = createServerFn({ method: "GET" })
       (select count(*)::int from unique_visitors where last_seen > ${since} and visit_count > 1) as returning,
       (select coalesce(sum(visit_count), 0)::int from unique_ips) as all_time_visits,
       (select count(*)::int from unique_ips) as all_time_unique,
-      (select count(*)::int from sessions where started_at > ${since}) as period_visits,
+      (select count(*)::int from (
+        select 1 from behavior_events
+        where kind = 'page' and created_at > ${since}
+        group by coalesce(ip_hash, visitor_key), floor(extract(epoch from created_at) / 1800)
+      ) period_windows) as period_visits,
       (select count(distinct ip_hash)::int from unique_ips where last_seen > ${since}) as period_unique
   `;
   let countries = await sql<CountryStat>`
@@ -724,7 +779,7 @@ export const getOfficeStats = createServerFn({ method: "GET" })
   const ipFromEvents = await sql<IpTraffic & { last_at?: string | Date }>`
     select
       e.ip_hash as id,
-      coalesce(max(e.ip_hint), '—') as hint,
+      coalesce(max(e.ip), max(e.ip_hint), '—') as hint,
       max(e.country_code) as country,
       count(*) filter (where e.kind = 'page')::int as visits,
       count(*) filter (where e.kind = 'event')::int as clicks,
@@ -749,7 +804,7 @@ export const getOfficeStats = createServerFn({ method: "GET" })
           await sql<IpTraffic & { last_at?: string | Date }>`
             select
               i.ip_hash as id,
-              i.ip_hint as hint,
+              coalesce(i.ip, i.ip_hint) as hint,
               i.country_code as country,
               i.visit_count as visits,
               coalesce(c.clicks, 0)::int as clicks,
@@ -774,7 +829,7 @@ export const getOfficeStats = createServerFn({ method: "GET" })
         }));
   const ipHitRows = await sql<{ hint: string; country: string | null; at: string | Date; page: string }>`
     select
-      coalesce(ip_hint, '—') as hint,
+      coalesce(ip, ip_hint, '—') as hint,
       country_code as country,
       created_at as at,
       name as page
@@ -789,11 +844,12 @@ export const getOfficeStats = createServerFn({ method: "GET" })
     at: isoHour(r.at),
     page: r.page,
   }));
-  const [funnel] = await sql<{ land: number; explore: number; share: number; office: number }>`
+  const [funnel] = await sql<{ land: number; explore: number; share: number; contact: number; office: number }>`
     select
       (select count(distinct visitor_key)::int from behavior_events where kind = 'page' and name = '/' and created_at > ${since}) as land,
-      (select count(distinct visitor_key)::int from behavior_events where (name like 'tab:%' or name like 'country:%') and created_at > ${since}) as explore,
+      (select count(distinct visitor_key)::int from behavior_events where (name like 'tab:%' or name like 'country:%' or name like 'nav:%' or name like 'work:%' or name like 'mode:%' or name like 'tone:%' or name like 'region:%' or name like 'coverage:%') and created_at > ${since}) as explore,
       (select count(distinct visitor_key)::int from behavior_events where name like 'share:%' and created_at > ${since}) as share,
+      (select count(distinct visitor_key)::int from behavior_events where name like 'contact:%' and created_at > ${since}) as contact,
       (select count(distinct visitor_key)::int from behavior_events where name in ('nav:office', '/office') and created_at > ${since}) as office
   `;
   const [goalRow] = await sql<{
@@ -876,6 +932,8 @@ export const getOfficeStats = createServerFn({ method: "GET" })
     last24h: 0,
     typicalDay: 0,
     days: fillDaySeries([]),
+    hours: [],
+    anomaly: trafficAnomaly([]),
     allTimeVisits: (summary?.all_time_visits ?? 0) + VISIT_BASELINE,
     allTimeUnique: summary?.all_time_unique ?? 0,
     periodVisits: summary?.period_visits ?? views,
@@ -884,12 +942,14 @@ export const getOfficeStats = createServerFn({ method: "GET" })
       land: funnel?.land ?? 0,
       explore: funnel?.explore ?? 0,
       share: funnel?.share ?? 0,
+      contact: funnel?.contact ?? 0,
       office: funnel?.office ?? 0,
     },
     goals: [
       { id: "land", completions: funnel?.land ?? 0 },
       { id: "explore", completions: funnel?.explore ?? 0 },
       { id: "share", completions: funnel?.share ?? 0 },
+      { id: "contact", completions: funnel?.contact ?? 0 },
       { id: "office", completions: funnel?.office ?? 0 },
       { id: "google", completions: goalRow?.google_sess ?? 0 },
       { id: "googleShare", completions: goalRow?.google_share ?? 0 },
@@ -915,6 +975,8 @@ function applyTraffic(stats: OfficeStats, traffic: TrafficSnapshot): OfficeStats
     last24h: traffic.last24h,
     typicalDay: traffic.typicalDay,
     days: traffic.days,
+    hours: traffic.hours,
+    anomaly: traffic.anomaly,
   };
 }
 

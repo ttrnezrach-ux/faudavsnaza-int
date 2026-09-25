@@ -6,7 +6,7 @@ import { I18nProvider, useI18n } from "@/lib/i18n";
 import { WorkProvider } from "@/lib/work";
 import { parseShareLang } from "@/lib/seo";
 import { isWorkViewParam, isContentTab } from "@/lib/share";
-import { trackPage } from "@/lib/track";
+import { noteStay, trackOutbound, trackPage } from "@/lib/track";
 import { VersionStamp } from "@/components/version-stamp";
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -31,11 +31,36 @@ function ShellFrame({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     const path =
-      pathname === "/" || pathname === "/office" || pathname === "/accessibility" ? pathname : "/other";
+      pathname === "/" || pathname === "/office" || pathname === "/accessibility" || pathname === "/scan"
+        ? pathname
+        : "/other";
     const work = isWorkViewParam(search.work) ? search.work : "compare";
     const tab = isContentTab(search.tab) ? search.tab : "map";
     trackPage(path, locale, { content_group: work, item_id: tab });
   }, [pathname, locale, search.work, search.tab]);
+
+  useEffect(() => {
+    const tick = () => noteStay();
+    const id = window.setInterval(tick, 30_000);
+    const onHide = () => {
+      if (document.visibilityState === "hidden") tick();
+    };
+    const onClick = (event: MouseEvent) => {
+      const node = event.target;
+      if (!(node instanceof Element)) return;
+      const href = node.closest("a")?.getAttribute("href");
+      if (href) trackOutbound(href);
+    };
+    document.addEventListener("visibilitychange", onHide);
+    window.addEventListener("pagehide", tick);
+    document.addEventListener("click", onClick);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener("visibilitychange", onHide);
+      window.removeEventListener("pagehide", tick);
+      document.removeEventListener("click", onClick);
+    };
+  }, []);
 
   return (
     <>

@@ -612,6 +612,7 @@ const GOAL_KEYS: Record<string, string> = {
   land: "goalLand",
   explore: "goalExplore",
   share: "goalShare",
+  contact: "goalContact",
   office: "goalOffice",
   google: "goalGoogle",
   googleShare: "goalGoogleShare",

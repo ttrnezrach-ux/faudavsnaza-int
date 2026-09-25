@@ -1,4 +1,4 @@
-import { recordBehavior, recordClick, recordUniqueVisit, getVisitStats, type VisitStats } from "@/lib/visits";
+import { recordBehavior, recordClick, recordUniqueVisit, touchSession, getVisitStats, type VisitStats } from "@/lib/visits";
 import { gaFromClick, sendGaEvent } from "@/lib/ga";
 import {
   clientArrival,
@@ -63,10 +63,42 @@ export function trackClick(target: string) {
   }
 }
 
+const TRACKED_PATHS = new Set(["/", "/office", "/accessibility", "/scan", "/other"]);
+
+/** Keeps session length current so time-on-site is not stuck at the last click. */
+export function noteStay() {
+  try {
+    const data = payload("event", "stay");
+    void touchSession({
+      data: { visitorKey: data.visitorKey, sessionKey: data.sessionKey },
+    }).catch(() => {});
+  } catch {
+    /* dwell must never break the page */
+  }
+}
+
+/** Records an outbound http(s) link without the path or query (no PII). */
+export function trackOutbound(href: string) {
+  try {
+    const url = new URL(href, window.location.href);
+    if (url.protocol !== "http:" && url.protocol !== "https:") return;
+    if (url.host === window.location.host) return;
+    const host = url.host
+      .replace(/^www\./, "")
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-+|-+$/g, "")
+      .slice(0, 40);
+    if (!host) return;
+    trackClick(`out:${host}`);
+  } catch {
+    /* ignore malformed hrefs */
+  }
+}
+
 export function trackPage(path?: string, locale?: string, extra?: Record<string, string>) {
   const name = path ?? clientPath();
-  const allowed = name === "/" || name === "/office" || name === "/accessibility" || name === "/other";
-  if (!allowed) return;
+  if (!TRACKED_PATHS.has(name)) return;
   try {
     const data = payload("page", name, locale);
     if (!uniqueVisitSent) {
