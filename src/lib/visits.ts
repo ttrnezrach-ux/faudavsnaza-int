@@ -541,8 +541,6 @@ export const getOfficeStats = createServerFn({ method: "GET" })
   }
   const range = data.range;
   const since = sinceFor(range);
-  const sql = await getSql();
-  await forgetExpiredIps(sql);
   const empty: OfficeStats = {
     total: 0,
     recent: 0,
@@ -584,6 +582,8 @@ export const getOfficeStats = createServerFn({ method: "GET" })
     durationBuckets: [],
   };
   try {
+    const sql = await getSql();
+    await forgetExpiredIps(sql);
     const [summary] = await sql<{
       total: number;
       recent: number;
@@ -968,7 +968,8 @@ export const getOfficeStats = createServerFn({ method: "GET" })
     durationBuckets,
   };
   return applyTraffic(stats, await loadTrafficSnapshot());
-  } catch {
+  } catch (err) {
+    console.error("[office] stats failed:", err);
     return applyTraffic(empty, await loadTrafficSnapshot());
   }
 });
