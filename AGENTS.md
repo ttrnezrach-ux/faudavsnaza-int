@@ -349,3 +349,19 @@ auth/db: OFF by default — sign-in, @/lib/db or migrations ONLY on an accounts 
 never:   build an app for a greeting/number/question; invent imagine_* calls;
          ask the user to run commands; delete or abandon /workspace/startup.sh
 ```
+
+---
+
+## Visit counter (this site)
+
+The public footer counter is **off**. Counting still runs (`src/lib/track.ts` records a visit; `src/lib/visits.ts` writes it). Nothing is rendered, so the footer has no empty gap.
+
+To show the counter on the public site again, set `SHOW_PUBLIC_VISIT_COUNTER` to `true` in `src/lib/visit-counter.ts`.
+
+The total is `VISIT_BASELINE` (133) plus visits recorded after that. 133 is the number the previous host `https://faudavsnaza-int.grok.me` showed in the footer after the page hydrated on 2026-09-25. It is not a hardcoded seed from an older commit.
+
+**Why the public counter read 0.** With no `DATABASE_URL`, `src/lib/db.ts` uses an in-memory PGLite database. That store is empty on every cold start and deploy. On the Vercel build PGLite also looks for `pglite.data` next to the server function and fails with `ENOENT` (its loader rejects that miss twice, which can kill the process). The app now loads the template itself when the package file is on disk, and if it is not, queries fail without crashing. Either way the counts are not durable. The office lock stays cookie-based and does not use this database.
+
+**Persistence.** Set `DATABASE_URL` to a Postgres connection string (Neon works). Migrations in `migrations/` apply on deploy. Without that variable, `/office` says new counts are not persistent instead of presenting them as a lasting total.
+
+**Monitoring.** `GET /api/office/traffic` returns JSON: `total`, `baseline`, `counted`, `lastHour`, `last24h`, `days` (14 UTC dates), `durable`. Send `Authorization: Bearer <token>`. The token is the env var `OFFICE_MONITOR_TOKEN`. If that variable is unset the route responds 503. A missing or wrong token responds 401. The body has no IP addresses or other personal data.

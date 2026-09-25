@@ -1,7 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
 import { getRequest } from "@tanstack/react-start/server";
 import { z } from "zod";
-import { getSql } from "@/lib/db";
+import { dbSource, getSql } from "@/lib/db";
+import { loadTrafficSnapshot } from "@/lib/traffic.server";
+import { VISIT_BASELINE, fillDaySeries, type DayVisit, type TrafficSnapshot } from "@/lib/visit-counter";
 import { countryFromTimezone, normalizeCountry } from "@/lib/geo";
 import { clientAddr, isBotRequest } from "@/lib/client-ip";
 
@@ -118,6 +120,13 @@ export type OfficeStats = {
   allTimeUnique: number;
   periodVisits: number;
   periodUnique: number;
+  baseline: number;
+  counted: number;
+  durable: boolean;
+  lastHour: number;
+  last24h: number;
+  typicalDay: number;
+  days: DayVisit[];
   funnel: { land: number; explore: number; share: number; office: number };
   goals: GoalStat[];
   durationBuckets: NamedCount[];
@@ -169,14 +178,18 @@ async function readStats(): Promise<VisitStats> {
       count(*)::int as unique
     from unique_ips
   `;
-  return { total: row?.total ?? 0, unique: row?.unique ?? 0, recent: row?.unique ?? 0 };
+  return {
+    total: (row?.total ?? 0) + VISIT_BASELINE,
+    unique: row?.unique ?? 0,
+    recent: row?.unique ?? 0,
+  };
 }
 
 export const getVisitStats = createServerFn({ method: "GET" }).handler(async () => {
   try {
     return await readStats();
   } catch {
-    return { total: 0, unique: 0, recent: 0 };
+    return { total: VISIT_BASELINE, unique: 0, recent: 0 };
   }
 });
 
@@ -242,7 +255,7 @@ export const recordUniqueVisit = createServerFn({ method: "POST" })
       }
       return await readStats();
     } catch {
-      return { total: 0, unique: 0, recent: 0 };
+      return { total: VISIT_BASELINE, unique: 0, recent: 0 };
     }
   });
 
@@ -496,10 +509,17 @@ export const getOfficeStats = createServerFn({ method: "GET" })
     hourlyDual: [],
     ipLeaders: [],
     ipHits: [],
-    allTimeVisits: 0,
+    allTimeVisits: VISIT_BASELINE,
     allTimeUnique: 0,
     periodVisits: 0,
     periodUnique: 0,
+    baseline: VISIT_BASELINE,
+    counted: 0,
+    durable: dbSource === "neon",
+    lastHour: 0,
+    last24h: 0,
+    typicalDay: 0,
+    days: fillDaySeries([]),
     google: { sessions: 0, products: [], hosts: [], countries: [], landings: [], campaigns: [] },
     funnel: { land: 0, explore: 0, share: 0, office: 0 },
     goals: [],
@@ -849,7 +869,14 @@ export const getOfficeStats = createServerFn({ method: "GET" })
     ),
     ipLeaders,
     ipHits,
-    allTimeVisits: summary?.all_time_visits ?? 0,
+    baseline: VISIT_BASELINE,
+    counted: summary?.all_time_visits ?? 0,
+    durable: dbSource === "neon",
+    lastHour: 0,
+    last24h: 0,
+    typicalDay: 0,
+    days: fillDaySeries([]),
+    allTimeVisits: (summary?.all_time_visits ?? 0) + VISIT_BASELINE,
     allTimeUnique: summary?.all_time_unique ?? 0,
     periodVisits: summary?.period_visits ?? views,
     periodUnique: summary?.period_unique ?? (summary?.recent ?? 0),
@@ -871,9 +898,23 @@ export const getOfficeStats = createServerFn({ method: "GET" })
     ],
     durationBuckets,
   };
-  return stats;
+  return applyTraffic(stats, await loadTrafficSnapshot());
   } catch {
-    return empty;
+    return applyTraffic(empty, await loadTrafficSnapshot());
   }
 });
+
+function applyTraffic(stats: OfficeStats, traffic: TrafficSnapshot): OfficeStats {
+  return {
+    ...stats,
+    allTimeVisits: traffic.total,
+    baseline: traffic.baseline,
+    counted: traffic.counted,
+    durable: traffic.durable,
+    lastHour: traffic.lastHour,
+    last24h: traffic.last24h,
+    typicalDay: traffic.typicalDay,
+    days: traffic.days,
+  };
+}
 

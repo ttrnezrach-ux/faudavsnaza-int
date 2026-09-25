@@ -105,13 +105,59 @@ function createNeonSql(): Promise<Sql> {
   return globalRef.__pgSqlPromise__;
 }
 
+/**
+ * The Vercel server bundle looks for `pglite.data` / `pglite.wasm` / `initdb.wasm`
+ * next to the function, and those files are emitted as static assets instead.
+ * PGLite's loader rejects a missing file on a promise with no catch, which kills
+ * the process. Read the package copies ourselves and pass them in. If they are
+ * not on disk (typical on Vercel), skip constructing PGLite entirely.
+ */
+async function loadPgliteAssets(): Promise<{
+  fsBundle: Blob;
+  pgliteWasmModule: WebAssembly.Module;
+  initdbWasmModule: WebAssembly.Module;
+} | null> {
+  try {
+    const { createRequire } = await import("node:module");
+    const { readFile } = await import("node:fs/promises");
+    const { dirname, join } = await import("node:path");
+    const require = createRequire(import.meta.url);
+    const dir = dirname(require.resolve("@electric-sql/pglite"));
+    const read = (name: string) => readFile(join(dir, name));
+    const [data, wasm, initdb] = await Promise.all([
+      read("pglite.data"),
+      read("pglite.wasm"),
+      read("initdb.wasm"),
+    ]);
+    const [pgliteWasmModule, initdbWasmModule] = await Promise.all([
+      WebAssembly.compile(wasm),
+      WebAssembly.compile(initdb),
+    ]);
+    return {
+      fsBundle: new Blob([new Uint8Array(data)]),
+      pgliteWasmModule,
+      initdbWasmModule,
+    };
+  } catch (err) {
+    console.error("[db] PGLite assets missing; embedded database will not open.", err);
+    return null;
+  }
+}
+
 async function createPgliteSql(): Promise<Sql> {
   // Embedded Postgres, imported on demand so it never loads on the Neon path.
   // One in-memory instance per process, shared across HMR module instances, so
   // data survives source edits (it resets on dev-server restart).
   globalRef.__pgliteInstance__ ??= (async () => {
     const { PGlite } = await import("@electric-sql/pglite");
+    const assets = await loadPgliteAssets();
+    if (!assets) {
+      throw new Error(
+        "PGLite assets are missing. Set DATABASE_URL to store visits in Postgres.",
+      );
+    }
     const pg = new PGlite({
+      ...assets,
       parsers: {
         [OID_INT8]: Number,
         [OID_DATE]: identity,
@@ -230,9 +276,11 @@ const globalBoot = globalThis as typeof globalThis & {
   __pgBootstrapPromise__?: Promise<void>;
 };
 if (typeof window === "undefined" && dbSource === "pglite") {
+  // Do not rethrow: on Vercel the embedded database often cannot open
+  // (`ENOENT …/pglite.data`). A thrown bootstrap rejection kills the process.
+  // Callers of getSql() still see the failure and can say the store is not durable.
   globalBoot.__pgBootstrapPromise__ ??= ensureDbReady().catch((err) => {
     globalBoot.__pgBootstrapPromise__ = undefined;
     console.error("[db] PGLite bootstrap failed:", err);
-    throw err;
   });
 }

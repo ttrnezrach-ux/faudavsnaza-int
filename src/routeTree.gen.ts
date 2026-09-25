@@ -13,6 +13,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AccessibilityRouteImport } from './routes/accessibility'
 import { Route as OfficeRouteImport } from './routes/office'
 import { Route as ScanRouteImport } from './routes/scan'
+import { Route as ApiOfficeTrafficRouteImport } from './routes/api/office/traffic'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -34,18 +35,25 @@ const ScanRoute = ScanRouteImport.update({
   path: '/scan',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiOfficeTrafficRoute = ApiOfficeTrafficRouteImport.update({
+  id: '/api/office/traffic',
+  path: '/api/office/traffic',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/accessibility': typeof AccessibilityRoute
   '/office': typeof OfficeRoute
   '/scan': typeof ScanRoute
+  '/api/office/traffic': typeof ApiOfficeTrafficRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/accessibility': typeof AccessibilityRoute
   '/office': typeof OfficeRoute
   '/scan': typeof ScanRoute
+  '/api/office/traffic': typeof ApiOfficeTrafficRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -53,13 +61,21 @@ export interface FileRoutesById {
   '/accessibility': typeof AccessibilityRoute
   '/office': typeof OfficeRoute
   '/scan': typeof ScanRoute
+  '/api/office/traffic': typeof ApiOfficeTrafficRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/accessibility' | '/office' | '/scan'
+  fullPaths:
+    '/' | '/accessibility' | '/office' | '/scan' | '/api/office/traffic'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/accessibility' | '/office' | '/scan'
-  id: '__root__' | '/' | '/accessibility' | '/office' | '/scan'
+  to: '/' | '/accessibility' | '/office' | '/scan' | '/api/office/traffic'
+  id:
+    | '__root__'
+    | '/'
+    | '/accessibility'
+    | '/office'
+    | '/scan'
+    | '/api/office/traffic'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -67,6 +83,7 @@ export interface RootRouteChildren {
   AccessibilityRoute: typeof AccessibilityRoute
   OfficeRoute: typeof OfficeRoute
   ScanRoute: typeof ScanRoute
+  ApiOfficeTrafficRoute: typeof ApiOfficeTrafficRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -99,6 +116,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ScanRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/office/traffic': {
+      id: '/api/office/traffic'
+      path: '/api/office/traffic'
+      fullPath: '/api/office/traffic'
+      preLoaderRoute: typeof ApiOfficeTrafficRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -107,6 +131,7 @@ const rootRouteChildren: RootRouteChildren = {
   AccessibilityRoute: AccessibilityRoute,
   OfficeRoute: OfficeRoute,
   ScanRoute: ScanRoute,
+  ApiOfficeTrafficRoute: ApiOfficeTrafficRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
